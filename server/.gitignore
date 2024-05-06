@@ -1,0 +1,56 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore vendor directory for Composer
+vendor/
+
+# Ignore Python virtual environment directory
+venv/
+
+# Ignore package-lock.json file for npm
+package-lock.json
+
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore Java bytecode files
+*.class
+
+# Ignore IntelliJ IDEA project files
+.idea/
+
+# Ignore Visual Studio Code project files
+.vscode/
+
+# Ignore Eclipse project files
+.project
+.classpath
+
+# Ignore Sublime Text project files
+*.sublime-project
+*.sublime-workspace
+
+# Ignore logs directory and log files
+logs/
+*.log
+
+# Ignore temporary files
+*.tmp
+
+# Ignore environment configuration files
+.env
+.env.local
+
+# Ignore sensitive files containing keys, passwords, etc.
+*.key
+*.pem
+*.cert
+*.crt
+*.password
+*.passwd
+*.secret
+*.token
+
+# Ignore macOS system files
+.DS_Store
