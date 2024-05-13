@@ -7,7 +7,6 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const emailRoutes = require('./routes/Emails');
 
-
 // express app
 const app = express();
 
@@ -20,6 +19,11 @@ app.use(cors());
 app.use((req, res, next) => {
   console.log(req.path, req.method)
   next()
+});
+
+// Root path route
+app.get('/', (req, res) => {
+  res.send('Welcome to the Consensus Check API!');
 });
 
 // routes
