@@ -103,8 +103,8 @@ const createProposal = async (req, res) => {
       const emailContent = `A new proposal titled "${title}" has been submitted.\n
                         \nDescription: ${plainText}\n
                         \nSubmitted by: ${name || 'Anonymous'}
-                        \nLink to Proposal: ${process.env.BASE_URL}vote/${uniqueUrl}\n
-                        \nLink to Edit Proposal: ${process.env.BASE_URL}edit/${uniqueUrl}`;
+                        \nLink to Proposal: ${process.env.ORIGIN}vote/${uniqueUrl}\n
+                        \nLink to Edit Proposal: ${process.env.ORIGIN}edit/${uniqueUrl}`;
       
       await sendEmail(emailValue, emailSubject, emailContent);
     }
