@@ -37,7 +37,11 @@ const proposalSchema = new Schema({
     required: true,
     unique: true // Ensure uniqueness of the URL
   },
-  votes: [voteSchema] // Array of votes
+  votes: [voteSchema], // Array of votes
+  isFirstCreation: {
+    type: Boolean,
+    default: true
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', proposalSchema);

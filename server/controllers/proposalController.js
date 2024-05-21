@@ -3,23 +3,12 @@ const mongoose = require('mongoose');
 const { htmlToText } = require('html-to-text');
 const { sendEmail } = require('../utils/EmailUtils');
 
-
-
-
-
 // GET all proposals
 const getProposals = async (req, res) => {
-  const user_id = req.user._id
-
-  const proposals = await Proposal.find({ user_id }).sort({createdAt: -1})
-
-  res.status(200).json(proposals)
-}
-
-
-
-
-
+  const user_id = req.user._id;
+  const proposals = await Proposal.find({ user_id }).sort({ createdAt: -1 });
+  res.status(200).json(proposals);
+};
 
 // GET single proposal
 const getProposal = async (req, res) => {
@@ -35,6 +24,13 @@ const getProposal = async (req, res) => {
       if (!proposal) {
         return res.status(404).json({ error: 'Proposal not found' });
       }
+
+      // Check if it's the first creation and toggle it off
+      if (proposal.isFirstCreation) {
+        proposal.isFirstCreation = false;
+        await proposal.save();
+      }
+
       return res.status(200).json(proposal);
     }
   } catch (error) {
@@ -42,11 +38,6 @@ const getProposal = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 // Controller for getting the example proposal
 const getExampleProposal = async (req, res) => {
@@ -65,20 +56,9 @@ const getExampleProposal = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
 // POST create a proposal
 const createProposal = async (req, res) => {
-  const { title, 
-          description, 
-          name, 
-          email, 
-          uniqueUrl } = req.body;
+  const { title, description, name, email, uniqueUrl } = req.body;
 
   try {
     const user_id = req.user ? req.user._id : null;
@@ -86,19 +66,22 @@ const createProposal = async (req, res) => {
     // Check email and name values
     const emailValue = email || null;
     const nameValue = name || null;
-    const proposalData = { title, 
-                           description, 
-                           name: nameValue, 
-                           email: emailValue, 
-                           user_id, 
-                           uniqueUrl};
+    const proposalData = { 
+      title, 
+      description, 
+      name: nameValue, 
+      email: emailValue, 
+      user_id, 
+      uniqueUrl,
+      isFirstCreation: true // Initialize isFirstCreation as true
+    };
 
     // Create the proposal
     const proposal = await Proposal.create(proposalData);
 
     // Send email notification if email is provided
     if (emailValue) {
-      const plainText = htmlToText(description, { wordwrap: 130});
+      const plainText = htmlToText(description, { wordwrap: 130 });
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `A new proposal titled "${title}" has been submitted.\n
                         \nDescription: ${plainText}\n
@@ -116,25 +99,22 @@ const createProposal = async (req, res) => {
   }
 };
 
-
-
-
 // DELETE proposal
 const deleteProposal = async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({error: 'No such proposal'})
+    return res.status(404).json({ error: 'No such proposal' });
   }
 
-  const proposal = await Proposal.findOneAndDelete({_id: id})
+  const proposal = await Proposal.findOneAndDelete({ _id: id });
 
   if (!proposal) {
-    return res.status(400).json({error: 'No such proposal'})
+    return res.status(400).json({ error: 'No such proposal' });
   }
 
-  res.status(200).json(proposal)
-}
+  res.status(200).json(proposal);
+};
 
 const deleteProposalsByUser = async (userId) => {
   try {
@@ -150,20 +130,14 @@ const deleteProposalsByUser = async (userId) => {
   }
 };
 
-
-
-
-
-
 // UPDATE proposal
 const updateProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
-
   const { title, description, name, email, receiveNotifications } = req.body;
 
   try {
-    // Find the proposal by its ID
-    const proposal = await Proposal.findOne({uniqueUrl});
+    // Find the proposal by its unique URL
+    const proposal = await Proposal.findOne({ uniqueUrl });
 
     // If the proposal doesn't exist, return a 404 Not Found response
     if (!proposal) {
@@ -187,7 +161,7 @@ const updateProposal = async (req, res) => {
     console.error('Error updating proposal:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
 
 
 
