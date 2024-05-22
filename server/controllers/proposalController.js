@@ -211,7 +211,7 @@ const submitVote = async (req, res) => {
 // PUT update proposal response
 const updateVote = async(req, res) => {
   const { id } = req.params;
-  const { name, vote, comment } = req.body;
+  const { voteId, name, vote, comment } = req.body;
 
   try {
     // Find the proposal by ID
@@ -220,13 +220,14 @@ const updateVote = async(req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the vote by name
-    const voteToUpdate = proposal.votes.find(v => v.name === name);
+    // Find the vote by its unique identifier (_id)
+    const voteToUpdate = proposal.votes.find(v => v._id.toString() === voteId);
     if (!voteToUpdate) {
       return res.status(404).json({ error: 'Vote not found' });
     }
 
-    // Update the vote/comment
+    // Update the vote/comment and name
+    voteToUpdate.name = name;
     voteToUpdate.vote = vote;
     voteToUpdate.comment = comment;
 
@@ -239,6 +240,7 @@ const updateVote = async(req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
