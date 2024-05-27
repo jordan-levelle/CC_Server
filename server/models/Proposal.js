@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const voteSchema = new Schema({
   name: String,
-  vote: String, // 'yes' or 'no'
+  vote: String, 
   comment: String
 }, { timestamps: true });
 
@@ -38,10 +38,23 @@ const proposalSchema = new Schema({
     unique: true // Ensure uniqueness of the URL
   },
   votes: [voteSchema], // Array of votes
+
   isFirstCreation: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+    set: function(value) {
+        if (value === false) {
+            this.isFirstCreationShownAt = Date.now();
+        }
+        return value;
+    }
+  },
+
+  isFirstCreationShownAt: {
+    type: Date
+  },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', proposalSchema);
+

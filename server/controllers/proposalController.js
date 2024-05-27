@@ -10,34 +10,31 @@ const getProposals = async (req, res) => {
   res.status(200).json(proposals);
 };
 
+
 // GET single proposal
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
   try {
-    if (uniqueUrl === 'example') {
-      // If uniqueUrl is 'example', fetch the example proposal
-      return getExampleProposal(req, res);
-    } else {
-      // Fetch the regular proposal by uniqueUrl
-      const proposal = await Proposal.findOne({ uniqueUrl });
+      let proposal = await Proposal.findOne({ uniqueUrl });
+
       if (!proposal) {
-        return res.status(404).json({ error: 'Proposal not found' });
+          return res.status(404).json({ error: 'Proposal not found' });
       }
 
-      // Check if it's the first creation and toggle it off
-      if (proposal.isFirstCreation) {
-        proposal.isFirstCreation = false;
-        await proposal.save();
+      if (proposal.isFirstCreation && !proposal.isFirstCreationShownAt) {
+          proposal.isFirstCreation = false;
+          proposal.isFirstCreationShownAt = new Date();
+          await proposal.save();
       }
 
-      return res.status(200).json(proposal);
-    }
+      res.status(200).json(proposal);
   } catch (error) {
-    console.error('Error fetching proposal by unique URL:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+      console.error('Error fetching proposal by unique URL:', error);
+      res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Controller for getting the example proposal
 const getExampleProposal = async (req, res) => {
@@ -73,7 +70,6 @@ const createProposal = async (req, res) => {
       email: emailValue, 
       user_id, 
       uniqueUrl,
-      isFirstCreation: true // Initialize isFirstCreation as true
     };
 
     // Create the proposal
@@ -209,7 +205,7 @@ const submitVote = async (req, res) => {
 
 
 // PUT update proposal response
-const updateVote = async(req, res) => {
+const updateVote = async (req, res) => {
   const { id } = req.params;
   const { name, vote, comment } = req.body;
 
@@ -229,6 +225,11 @@ const updateVote = async(req, res) => {
     // Update the vote/comment
     voteToUpdate.vote = vote;
     voteToUpdate.comment = comment;
+
+    // Update the name if it's included in the request body
+    if (req.body.newName) {
+      voteToUpdate.name = req.body.newName;
+    }
 
     // Save the updated proposal
     await proposal.save();
@@ -314,7 +315,6 @@ module.exports = {
   getExampleProposal,
   deleteProposalsByUser // Added new function to exports
 };
-
 
 
 
