@@ -76,8 +76,8 @@ const createProposal = async (req, res) => {
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Description:</strong> ${plainText}</p>
         <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
-        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}/edit/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}edit/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
       
       await sendEmail(emailValue, emailSubject, emailContent);
