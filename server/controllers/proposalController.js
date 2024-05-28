@@ -10,31 +10,23 @@ const getProposals = async (req, res) => {
   res.status(200).json(proposals);
 };
 
-
 // GET single proposal
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
   try {
-      let proposal = await Proposal.findOne({ uniqueUrl });
+    let proposal = await Proposal.findOne({ uniqueUrl });
 
-      if (!proposal) {
-          return res.status(404).json({ error: 'Proposal not found' });
-      }
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
 
-      if (proposal.isFirstCreation && !proposal.isFirstCreationShownAt) {
-          proposal.isFirstCreation = false;
-          proposal.isFirstCreationShownAt = new Date();
-          await proposal.save();
-      }
-
-      res.status(200).json(proposal);
+    res.status(200).json(proposal);
   } catch (error) {
-      console.error('Error fetching proposal by unique URL:', error);
-      res.status(500).json({ error: 'Internal server error' });
+    console.error('Error fetching proposal by unique URL:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 // Controller for getting the example proposal
 const getExampleProposal = async (req, res) => {
@@ -79,11 +71,14 @@ const createProposal = async (req, res) => {
     if (emailValue) {
       const plainText = htmlToText(description, { wordwrap: 130 });
       const emailSubject = 'New Proposal Submitted';
-      const emailContent = `A new proposal titled "${title}" has been submitted.\n
-                        \nDescription: ${plainText}\n
-                        \nSubmitted by: ${name || 'Anonymous'}
-                        \nLink to Proposal: ${process.env.ORIGIN}vote/${uniqueUrl}\n
-                        \nLink to Edit Proposal: ${process.env.ORIGIN}edit/${uniqueUrl}`;
+      const emailContent = `
+        <p>You submitted a new proposal!</p>
+        <p><strong>Title:</strong> ${title}</p>
+        <p><strong>Description:</strong> ${plainText}</p>
+        <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
+        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/edit/${uniqueUrl}">Link to Edit Proposal</a></p>
+      `;
       
       await sendEmail(emailValue, emailSubject, emailContent);
     }
@@ -94,6 +89,9 @@ const createProposal = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+
+
 
 // DELETE proposal
 const deleteProposal = async (req, res) => {
@@ -155,14 +153,9 @@ const updateProposal = async (req, res) => {
   } catch (error) {
     // If there's an error, return a 500 Internal Server Error response
     console.error('Error updating proposal:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 // ADD vote to proposal
 const submitVote = async (req, res) => {
@@ -186,7 +179,13 @@ const submitVote = async (req, res) => {
     // Check if email notifications are enabled for the proposal owner
     if (proposal.email) {
       const emailSubject = 'New Vote Submitted';
-      const emailContent = `A new vote has been submitted for your proposal titled "${proposal.title}".\n\nSubmitted by: ${name}\nVote: ${vote}\nComment: ${comment}`;
+      const emailContent = `
+        <p>A new vote has been submitted for your proposal titled "<strong>${proposal.title}</strong>".</p>
+        <p><strong>Submitted by:</strong> ${name}</p>
+        <p><strong>Vote:</strong> ${vote}</p>
+        <p><strong>Comment:</strong> ${comment}</p>
+        <p><a href="${process.env.ORIGIN}/vote/${proposal.uniqueUrl}">View Proposal</a></p>
+      `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
     }
@@ -197,11 +196,6 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 
 // PUT update proposal response
@@ -241,11 +235,6 @@ const updateVote = async (req, res) => {
   }
 };
 
-
-
-
-
-
 // DELETE user vote
 const deleteVote = async (req, res) => {
   const { id } = req.params;
@@ -276,11 +265,6 @@ const deleteVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 // GET Votes for Proposal
 const getSubmittedVotes = async (req, res) => {
@@ -313,11 +297,8 @@ module.exports = {
   getSubmittedVotes,
   deleteVote,
   getExampleProposal,
-  deleteProposalsByUser // Added new function to exports
+  deleteProposalsByUser,
 };
-
-
-
 
 
 
