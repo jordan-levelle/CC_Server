@@ -184,7 +184,7 @@ const submitVote = async (req, res) => {
         <p><strong>Submitted by:</strong> ${name}</p>
         <p><strong>Vote:</strong> ${vote}</p>
         <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}/vote/${proposal.uniqueUrl}">View Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
       `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
@@ -201,7 +201,7 @@ const submitVote = async (req, res) => {
 // PUT update proposal response
 const updateVote = async (req, res) => {
   const { id } = req.params;
-  const { name, vote, comment } = req.body;
+  const { name, vote, comment, newName } = req.body;
 
   try {
     // Find the proposal by ID
@@ -210,20 +210,16 @@ const updateVote = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the vote by name
-    const voteToUpdate = proposal.votes.find(v => v.name === name);
+    // Find the vote by ID or by name if name is provided
+    const voteToUpdate = proposal.votes.id(req.body.voteId) || proposal.votes.find(v => v.name === name);
     if (!voteToUpdate) {
       return res.status(404).json({ error: 'Vote not found' });
     }
 
-    // Update the vote/comment
-    voteToUpdate.vote = vote;
-    voteToUpdate.comment = comment;
-
-    // Update the name if it's included in the request body
-    if (req.body.newName) {
-      voteToUpdate.name = req.body.newName;
-    }
+    // Update the vote/comment/name
+    if (vote !== undefined) voteToUpdate.vote = vote;
+    if (comment !== undefined) voteToUpdate.comment = comment;
+    if (newName !== undefined) voteToUpdate.name = newName;
 
     // Save the updated proposal
     await proposal.save();
@@ -234,6 +230,7 @@ const updateVote = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // DELETE user vote
 const deleteVote = async (req, res) => {
