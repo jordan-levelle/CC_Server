@@ -1,5 +1,3 @@
-// User.js
-
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -19,9 +17,11 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   },
-  verificationToken: {
-    type: String
-  },
+  verificationToken: String,
+  participatedProposals: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Proposal'
+  }]
 });
 
 userSchema.pre('save', async function(next) {

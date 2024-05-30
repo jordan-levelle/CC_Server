@@ -10,25 +10,42 @@ const {
   submitVote,
   updateVote,
   getSubmittedVotes,
-  deleteVote, 
+  deleteVote,
   getExampleProposal,
-  deleteProposalsByUser
+  deleteProposalsByUser,
 } = require('../controllers/proposalController');
 
+// Get all proposals
 router.get('/', requireAuth, getProposals);
+
+// Create a new proposal
 router.post('/', requireAuth, createProposal);
+
+// Delete a proposal by ID
 router.delete('/:id', requireAuth, deleteProposal);
-router.delete('/id', requireAuth, deleteProposalsByUser);
-router.put('/:uniqueUrl', updateProposal);
 
+// Delete all proposals by user
+router.delete('/user/:id', requireAuth, deleteProposalsByUser);
 
+// Update a proposal by unique URL
+router.put('/:uniqueUrl', requireAuth, updateProposal);
+
+// Get a proposal by unique URL
 router.get('/:uniqueUrl', getProposal);
-router.get('/:id/votes', getSubmittedVotes);
-router.post('/:id/vote', submitVote);
-router.put('/:id/vote', updateVote);
-router.delete('/votes/:id', deleteVote);
 
+// Get all votes for a proposal
+router.get('/:id/votes', requireAuth, getSubmittedVotes);
+
+// Submit a vote for a proposal
+router.post('/:id/vote', requireAuth, submitVote);
+
+// Update a vote for a proposal
+router.put('/:id/vote', requireAuth, updateVote);
+
+// Delete a vote by ID
+router.delete('/votes/:id', requireAuth, deleteVote);
+
+// Get an example proposal
 router.get('/example', getExampleProposal);
-
 
 module.exports = router;

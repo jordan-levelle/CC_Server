@@ -1,5 +1,3 @@
-// userController.js
-
 const User = require('../models/User');
 const Proposal = require('../models/Proposal');
 const proposalController = require('../controllers/proposalController');
@@ -50,17 +48,13 @@ const signupUser = async (req, res) => {
 
     const newUser = await User.create({ email, password });
 
-    // Generate a verification token using the utility function
     const verificationToken = generateVerificationToken(newUser._id);
 
-    // Save the verification token to the user document
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    // Construct the verification and redirect link
     const verificationAndRedirectLink = `${process.env.BASE_URL}/verify/${verificationToken}`;
 
-    // Send verification email using the utility function
     const emailSubject = 'Account Verification';
     const emailContent = `Click ${verificationAndRedirectLink} to verify your account and be redirected to your account page.`;
     await sendEmail(email, emailSubject, emailContent);
@@ -100,11 +94,9 @@ const deleteUser = async (req, res) => {
 
   try {
     if (deleteProposals) {
-      // Call the deleteProposalsByUser function from the proposal controller
       await proposalController.deleteProposalsByUser(userId);
     }
 
-    // Delete user account
     await User.findByIdAndDelete(userId);
 
     res.status(200).json({ message: 'Account deleted successfully' });
@@ -121,12 +113,26 @@ const updateUserEmail = async (req, res) => {
 
   try {
     await User.findByIdAndUpdate(userId, { email });
-    res.status(200).json({ message: 'Email updated successfullt'});
+    res.status(200).json({ message: 'Email updated successfully'});
   } catch (error) {
     res.status(400).json({ error: error.message});
   }
 }
 
-module.exports = { signupUser, loginUser, verifyUser, deleteUser, updateUserEmail };
+const getParticipatedProposals = async (req, res) => {
+  const userId = req.user._id;
 
+  try {
+    const user = await User.findById(userId).populate('participatedProposals');
 
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json(user.participatedProposals);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { signupUser, loginUser, verifyUser, deleteUser, updateUserEmail, getParticipatedProposals };

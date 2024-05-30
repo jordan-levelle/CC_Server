@@ -1,16 +1,16 @@
 const Proposal = require('../models/Proposal');
+const User = require('../models/User');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const { htmlToText } = require('html-to-text');
 const { sendEmail } = require('../utils/EmailUtils');
 
-// GET all proposals
 const getProposals = async (req, res) => {
   const user_id = req.user._id;
   const proposals = await Proposal.find({ user_id }).sort({ createdAt: -1 });
   res.status(200).json(proposals);
 };
 
-// GET single proposal
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
@@ -28,7 +28,6 @@ const getProposal = async (req, res) => {
   }
 };
 
-// Controller for getting the example proposal
 const getExampleProposal = async (req, res) => {
   try {
     const exampleProposal = await Proposal.findOne({ isExample: true });
@@ -37,7 +36,6 @@ const getExampleProposal = async (req, res) => {
       return res.status(404).json({ error: 'Example proposal not found' });
     }
 
-    // Return the example proposal data
     res.json(exampleProposal);
   } catch (error) {
     console.error('Error finding example proposal:', error);
@@ -45,14 +43,12 @@ const getExampleProposal = async (req, res) => {
   }
 };
 
-// POST create a proposal
 const createProposal = async (req, res) => {
   const { title, description, name, email, uniqueUrl } = req.body;
 
   try {
     const user_id = req.user ? req.user._id : null;
 
-    // Check email and name values
     const emailValue = email || null;
     const nameValue = name || null;
     const proposalData = { 
@@ -64,10 +60,8 @@ const createProposal = async (req, res) => {
       uniqueUrl,
     };
 
-    // Create the proposal
     const proposal = await Proposal.create(proposalData);
 
-    // Send email notification if email is provided
     if (emailValue) {
       const plainText = htmlToText(description, { wordwrap: 130 });
       const emailSubject = 'New Proposal Submitted';
@@ -90,10 +84,6 @@ const createProposal = async (req, res) => {
   }
 };
 
-
-
-
-// DELETE proposal
 const deleteProposal = async (req, res) => {
   const { id } = req.params;
 
@@ -112,71 +102,69 @@ const deleteProposal = async (req, res) => {
 
 const deleteProposalsByUser = async (userId) => {
   try {
-    // Find and delete all proposals where user_id matches the provided userId
     const deleteResult = await Proposal.deleteMany({ user_id: userId });
-
-    // Return the result of the deletion operation
     return deleteResult;
   } catch (error) {
-    // Handle any errors
     console.error('Error deleting proposals:', error);
     throw new Error('Error deleting proposals');
   }
 };
 
-// UPDATE proposal
 const updateProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
   const { title, description, name, email, receiveNotifications } = req.body;
 
   try {
-    // Find the proposal by its unique URL
     const proposal = await Proposal.findOne({ uniqueUrl });
 
-    // If the proposal doesn't exist, return a 404 Not Found response
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Update the proposal fields with the new data
     proposal.title = title;
     proposal.description = description;
     proposal.name = name;
     proposal.email = email;
     proposal.receiveNotifications = receiveNotifications;
 
-    // Save the updated proposal
     await proposal.save();
 
-    // Return the updated proposal as the response
     res.json(proposal);
   } catch (error) {
-    // If there's an error, return a 500 Internal Server Error response
     console.error('Error updating proposal:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// ADD vote to proposal
 const submitVote = async (req, res) => {
   const { id } = req.params;
   const { name, vote, comment } = req.body;
 
   try {
-    // Find the proposal by ID
+    let userId;
+    if (req.headers.authorization) {
+      const token = req.headers.authorization.split(' ')[1];
+      const decodedToken = jwt.verify(token, process.env.SECRET);
+      userId = decodedToken._id;
+    }
+
     const proposal = await Proposal.findById(id);
 
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Add the vote to the proposal
     proposal.votes.push({ name, vote, comment });
-
-    // Save the updated proposal
     await proposal.save();
 
-    // Check if email notifications are enabled for the proposal owner
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user && !user.participatedProposals.includes(proposal._id)) {
+        user.participatedProposals.push(proposal._id);
+        await user.save();
+      }
+    }
+
     if (proposal.email) {
       const emailSubject = 'New Vote Submitted';
       const emailContent = `
@@ -196,7 +184,6 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 // PUT update proposal response
 const updateVote = async (req, res) => {
@@ -231,7 +218,6 @@ const updateVote = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 // DELETE user vote
 const deleteVote = async (req, res) => {
@@ -297,5 +283,3 @@ module.exports = {
   getExampleProposal,
   deleteProposalsByUser,
 };
-
-

@@ -1,24 +1,32 @@
 const express = require('express');
 const requireAuth = require('../middleware/requireAuth');
+const {
+  loginUser,
+  signupUser,
+  verifyUser,
+  deleteUser,
+  updateUserEmail,
+  getParticipatedProposals
+} = require('../controllers/userController');
 
-// controller functions
-const { loginUser, signupUser, verifyUser, deleteUser, updateUserEmail } = require('../controllers/userController')
+const router = express.Router();
 
-const router = express.Router()
+// Login route
+router.post('/login', loginUser);
 
-// login route
-router.post('/login', loginUser)
-
-// signup route
-router.post('/signup', signupUser)
+// Signup route
+router.post('/signup', signupUser);
 
 // Verification route
-router.post('/verify/:token', verifyUser); 
+router.post('/verify/:token', verifyUser);
 
+// Delete route
+router.delete('/delete', requireAuth, deleteUser);
 
-// delete route
-router.delete('/delete', requireAuth, deleteUser)
+// Update email route
+router.put('/updateEmail', requireAuth, updateUserEmail);
 
-router.put('/updateEmail', requireAuth, updateUserEmail)
+// Get participated proposals route
+router.get('/participatedProposals', requireAuth, getParticipatedProposals);
 
-module.exports = router
+module.exports = router;
