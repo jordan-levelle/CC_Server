@@ -76,8 +76,8 @@ const createProposal = async (req, res) => {
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Description:</strong> ${plainText}</p>
         <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
-        <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}edit/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/edit/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
       
       await sendEmail(emailValue, emailSubject, emailContent);
@@ -184,7 +184,7 @@ const submitVote = async (req, res) => {
         <p><strong>Submitted by:</strong> ${name}</p>
         <p><strong>Vote:</strong> ${vote}</p>
         <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${proposal.uniqueUrl}">View Proposal</a></p>
       `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
@@ -216,10 +216,11 @@ const updateVote = async (req, res) => {
       return res.status(404).json({ error: 'Vote not found' });
     }
 
-    // Update the vote/comment/name
+    // Update the vote/comment/name/timestamp
     if (vote !== undefined) voteToUpdate.vote = vote;
     if (comment !== undefined) voteToUpdate.comment = comment;
     if (newName !== undefined) voteToUpdate.name = newName;
+    voteToUpdate.updatedAt = new Date();
 
     // Save the updated proposal
     await proposal.save();
@@ -296,6 +297,5 @@ module.exports = {
   getExampleProposal,
   deleteProposalsByUser,
 };
-
 
 
