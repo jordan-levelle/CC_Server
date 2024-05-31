@@ -28,6 +28,28 @@ const getProposal = async (req, res) => {
   }
 };
 
+// proposalController.js
+const checkFirstRender = async (req, res) => {
+  try {
+    const proposal = await Proposal.findById(req.params.id);
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposal not found' });
+    }
+
+    const firstRender = proposal.firstRender;
+    if (firstRender) {
+      proposal.firstRender = false;
+      await proposal.save();
+    }
+
+    return res.json({ firstRender });
+  } catch (error) {
+    console.error('Error checking first render:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 const getExampleProposal = async (req, res) => {
   try {
     const exampleProposal = await Proposal.findOne({ isExample: true });
@@ -274,6 +296,7 @@ module.exports = {
   createProposal,
   getProposals,
   getProposal,
+  checkFirstRender,
   deleteProposal,
   updateProposal,
   submitVote,
@@ -283,3 +306,4 @@ module.exports = {
   getExampleProposal,
   deleteProposalsByUser,
 };
+

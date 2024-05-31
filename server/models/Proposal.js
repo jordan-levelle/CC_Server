@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const voteSchema = new Schema({
   name: String,
-  vote: String,
+  vote: String, // 'yes' or 'no'
   comment: String
 }, { timestamps: true });
 
@@ -16,8 +16,14 @@ const proposalSchema = new Schema({
     type: String,
     required: true
   },
-  name: String,
-  email: String,
+  name: {
+    type: String,
+    required: false
+  },
+  email: {
+    type: String,
+    required: false
+  },
   isExample: {
     type: Boolean,
     default: false
@@ -27,12 +33,18 @@ const proposalSchema = new Schema({
     required: true
   },
   uniqueUrl: {
-    type: String,
+    type: String, // Store the unique URL for the proposal
     required: true,
-    unique: true
+    unique: true // Ensure uniqueness of the URL
   },
-  votes: [voteSchema]
+  firstRender: {
+    type: Boolean,
+    default: true
+  },
+  votes: [voteSchema], // Array of votes
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', proposalSchema);
+
 
