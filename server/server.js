@@ -5,7 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
-const emailRoutes = require('./routes/Emails');
+
 
 // express app
 const app = express();
@@ -28,7 +28,6 @@ app.get('/', (req, res) => {
 
 // routes
 app.use('/api/proposals', proposalRoutes);
-app.use('/api/emails', emailRoutes);
 app.use('/api/user', userRoutes);
 
 // connect to db
