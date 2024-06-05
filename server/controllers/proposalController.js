@@ -85,12 +85,10 @@ const createProposal = async (req, res) => {
     const proposal = await Proposal.create(proposalData);
 
     if (emailValue) {
-      const plainText = htmlToText(description, { wordwrap: 130 });
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
-        <p>You submitted a new proposal!</p>
+      <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
-        <p><strong>Description:</strong> ${plainText}</p>
         <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
         <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
         <p><a href="${process.env.ORIGIN}/edit/${uniqueUrl}">Link to Edit Proposal</a></p>
@@ -306,4 +304,3 @@ module.exports = {
   getExampleProposal,
   deleteProposalsByUser,
 };
-

@@ -3,10 +3,8 @@ const Proposal = require('../models/Proposal');
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const sgMail = require('@sendgrid/mail');
 const { sendEmail, generateVerificationToken } = require('../utils/EmailUtils');
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const createToken = (_id) => {
   return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '1D' });
