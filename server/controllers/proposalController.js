@@ -44,7 +44,7 @@ const checkFirstRender = async (req, res) => {
 
     return res.json({ firstRender });
   } catch (error) {
-    console.error('Error checking first render:', error);
+    // console.error('Error checking first render:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -60,7 +60,7 @@ const getExampleProposal = async (req, res) => {
 
     res.json(exampleProposal);
   } catch (error) {
-    console.error('Error finding example proposal:', error);
+    // console.error('Error finding example proposal:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -90,8 +90,8 @@ const createProposal = async (req, res) => {
       <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
-        <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}edit/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/edit/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
       
       await sendEmail(emailValue, emailSubject, emailContent);
@@ -192,7 +192,7 @@ const submitVote = async (req, res) => {
         <p><strong>Submitted by:</strong> ${name}</p>
         <p><strong>Vote:</strong> ${vote}</p>
         <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${proposal.uniqueUrl}">View Proposal</a></p>
       `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
