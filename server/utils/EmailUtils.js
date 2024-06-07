@@ -24,8 +24,6 @@ const sendEmail = async (to, subject, htmlContent) => {
       html: htmlContent,
     });
 
-    console.log('Message sent: %s', info.messageId);
-    console.log('Email sent to: %s', to); // Log the recipient email address
   } catch (error) {
     console.error('Error sending email:', error);
   }
