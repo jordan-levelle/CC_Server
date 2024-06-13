@@ -51,7 +51,7 @@ const signupUser = async (req, res) => {
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    const verificationAndRedirectLink = `${process.env.ORIGIN}/verify/${verificationToken}`;
+    const verificationAndRedirectLink = `${process.env.ORIGIN}verify/${verificationToken}`;
     const emailSubject = 'Account Verification';
     const emailContent = `
       <p>Click the link below to verify your account and be redirected to your account page:</p>
