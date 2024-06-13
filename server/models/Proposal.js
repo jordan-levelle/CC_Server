@@ -47,4 +47,3 @@ const proposalSchema = new Schema({
 
 module.exports = mongoose.model('Proposal', proposalSchema);
 
-

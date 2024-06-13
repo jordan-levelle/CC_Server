@@ -6,7 +6,8 @@ const {
   verifyUser,
   deleteUser,
   updateUserEmail,
-  getParticipatedProposals
+  getParticipatedProposals,
+  checkVerificationStatus
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.post('/signup', signupUser);
 
 // Verification route
 router.post('/verify/:token', verifyUser);
+
+// Check verification status route
+router.get('/verify/status/:token', checkVerificationStatus);
 
 // Delete route
 router.delete('/delete', requireAuth, deleteUser);

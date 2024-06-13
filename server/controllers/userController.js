@@ -7,7 +7,7 @@ const { sendEmail, generateVerificationToken } = require('../utils/EmailUtils');
 
 
 const createToken = (_id) => {
-  return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '1D' });
+  return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '1d' });
 }
 
 const loginUser = async (req, res) => {
@@ -34,57 +34,89 @@ const loginUser = async (req, res) => {
   }
 }
 
+const crypto = require('crypto'); // Use for generating the token
+
 const signupUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
-
     if (userExists) {
       return res.status(400).json({ error: 'Email already in use' });
     }
 
     const newUser = await User.create({ email, password });
-
-    const verificationToken = generateVerificationToken(newUser._id);
+    const verificationToken = crypto.randomBytes(20).toString('hex'); // Generating a random token
 
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    // const verificationAndRedirectLink = `${process.env.BASE_URL}/verify/${verificationToken}`;
-
+    const verificationAndRedirectLink = `${process.env.ORIGIN}/verify/${verificationToken}`;
     const emailSubject = 'Account Verification';
-    const emailContent = 'This feature is in testing.';
+    const emailContent = `
+      <p>Click the link below to verify your account and be redirected to your account page:</p>
+      <p><a href="${verificationAndRedirectLink}" target="_blank">Verify Your Account</a></p>
+    `;
     await sendEmail(email, emailSubject, emailContent);
 
-    const token = createToken(newUser._id);
-
-    res.status(201).json({ email, token });
+    const token = createToken(newUser._id); // JWT for authentication
+    res.status(201).json({ email, token, verificationToken });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-}
+};
 
 
 const verifyUser = async (req, res) => {
   const { token } = req.params;
 
   try {
+    // Find user by verification token
     const user = await User.findOne({ verificationToken: token });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Check if already verified
+    if (user.verified) {
+      return res.status(200).json({ message: 'User already verified' });
+    }
+
+    // Mark the user as verified
     user.verified = true;
-    user.verificationToken = undefined;
     await user.save();
+
+    // Optional: Delay token removal for a brief period
+    setTimeout(async () => {
+      user.verificationToken = undefined;
+      await user.save();
+    }, 120000); // Delay for 1 minute (adjust as needed)
 
     res.status(200).json({ message: 'Account verified successfully' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error verifying account:', error);
+    res.status(500).json({ error: 'An error occurred while verifying the account' });
   }
-}
+};
+
+const checkVerificationStatus = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Find user by verification token
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json({ verified: user.verified });
+  } catch (error) {
+    console.error('Error checking verification status:', error);
+    res.status(500).json({ error: 'An error occurred while checking verification status' });
+  }
+};
+
 
 const deleteUser = async (req, res) => {
   const userId = req.user._id;
@@ -133,4 +165,10 @@ const getParticipatedProposals = async (req, res) => {
   }
 };
 
-module.exports = { signupUser, loginUser, verifyUser, deleteUser, updateUserEmail, getParticipatedProposals };
+module.exports = { signupUser, 
+                   loginUser, 
+                   verifyUser, 
+                   deleteUser, 
+                   updateUserEmail, 
+                   getParticipatedProposals,
+                   checkVerificationStatus };
