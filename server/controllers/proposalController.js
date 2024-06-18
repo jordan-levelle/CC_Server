@@ -2,7 +2,6 @@ const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const { htmlToText } = require('html-to-text');
 const { sendEmail } = require('../utils/EmailUtils');
 
 const getProposals = async (req, res) => {

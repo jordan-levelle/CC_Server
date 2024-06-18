@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const voteSchema = new Schema({
   name: String,
-  vote: String, // 'yes' or 'no'
+  vote: String, 
   comment: String
 }, { timestamps: true });
 
