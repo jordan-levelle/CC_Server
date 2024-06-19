@@ -158,7 +158,7 @@ const updateProposal = async (req, res) => {
 
 const submitVote = async (req, res) => {
   const { id } = req.params;
-  const { name, vote, comment } = req.body;
+  const { name, opinion, comment } = req.body;
 
   try {
     let userId;
@@ -174,7 +174,7 @@ const submitVote = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    proposal.votes.push({ name, vote, comment });
+    proposal.votes.push({ name, opinion, comment });
     await proposal.save();
 
     if (userId) {
@@ -190,7 +190,7 @@ const submitVote = async (req, res) => {
       const emailContent = `
         <p>A new vote has been submitted for your proposal titled "<strong>${proposal.title}</strong>".</p>
         <p><strong>Submitted by:</strong> ${name}</p>
-        <p><strong>Vote:</strong> ${vote}</p>
+        <p><strong>Vote:</strong> ${opinion}</p>
         <p><strong>Comment:</strong> ${comment}</p>
         <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
       `;
@@ -207,7 +207,7 @@ const submitVote = async (req, res) => {
 
 const updateVote = async (req, res) => {
   const { id } = req.params; // Proposal ID
-  const { _id, opinion, comment, newName } = req.body;
+  const { _id, opinion, comment, name } = req.body;
 
   
 
@@ -230,7 +230,7 @@ const updateVote = async (req, res) => {
     
     if (opinion !== undefined) voteToUpdate.opinion = opinion;
     if (comment !== undefined) voteToUpdate.comment = comment;
-    if (newName !== undefined) voteToUpdate.name = newName;
+    if (name !== undefined) voteToUpdate.name = name;
     voteToUpdate.updatedAt = new Date();
 
     
