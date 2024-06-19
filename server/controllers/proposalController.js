@@ -209,33 +209,33 @@ const updateVote = async (req, res) => {
   const { id } = req.params; // Proposal ID
   const { _id, opinion, comment, name } = req.body;
 
-  
+
 
   try {
-    
+
     const proposal = await Proposal.findById(id);
 
     if (!proposal) {
-      
+
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
     // Use _id from the request body as voteId
     const voteToUpdate = proposal.votes.id(_id); // Adjusted to use _id directly
     if (!voteToUpdate) {
-      
+
       return res.status(404).json({ error: 'Vote not found' });
     }
 
-    
+
     if (opinion !== undefined) voteToUpdate.opinion = opinion;
     if (comment !== undefined) voteToUpdate.comment = comment;
     if (name !== undefined) voteToUpdate.name = name;
     voteToUpdate.updatedAt = new Date();
 
-    
+
     await proposal.save();
-    
+
     res.status(200).json({ message: 'Vote updated successfully' });
   } catch (error) {
     console.error('Error updating vote:', error);
