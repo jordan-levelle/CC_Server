@@ -2,6 +2,7 @@ const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const { htmlToText } = require('html-to-text');
 const { sendEmail } = require('../utils/EmailUtils');
 
 const getProposals = async (req, res) => {
@@ -89,8 +90,8 @@ const createProposal = async (req, res) => {
       <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
-        <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}edit/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/edit/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
       
       await sendEmail(emailValue, emailSubject, emailContent);
@@ -191,7 +192,7 @@ const submitVote = async (req, res) => {
         <p><strong>Submitted by:</strong> ${name}</p>
         <p><strong>Vote:</strong> ${vote}</p>
         <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${proposal.uniqueUrl}">View Proposal</a></p>
       `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
@@ -204,39 +205,46 @@ const submitVote = async (req, res) => {
   }
 };
 
-// PUT update proposal response
 const updateVote = async (req, res) => {
-  const { id } = req.params;
-  const { name, vote, comment, newName } = req.body;
+  const { id } = req.params; // Proposal ID
+  const { _id, opinion, comment, newName } = req.body;
+
+  
 
   try {
-    // Find the proposal by ID
+    
     const proposal = await Proposal.findById(id);
+
     if (!proposal) {
+      
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the vote by ID or by name if name is provided
-    const voteToUpdate = proposal.votes.id(req.body.voteId) || proposal.votes.find(v => v.name === name);
+    // Use _id from the request body as voteId
+    const voteToUpdate = proposal.votes.id(_id); // Adjusted to use _id directly
     if (!voteToUpdate) {
+      
       return res.status(404).json({ error: 'Vote not found' });
     }
 
-    // Update the vote/comment/name/timestamp
-    if (vote !== undefined) voteToUpdate.vote = vote;
+    
+    if (opinion !== undefined) voteToUpdate.opinion = opinion;
     if (comment !== undefined) voteToUpdate.comment = comment;
     if (newName !== undefined) voteToUpdate.name = newName;
     voteToUpdate.updatedAt = new Date();
 
-    // Save the updated proposal
+    
     await proposal.save();
-
-    return res.status(200).json({ message: 'Vote/comment updated successfully' });
+    
+    res.status(200).json({ message: 'Vote updated successfully' });
   } catch (error) {
-    console.error('Error updating vote/comment:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error updating vote:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+
 
 // DELETE user vote
 const deleteVote = async (req, res) => {

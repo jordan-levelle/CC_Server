@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const voteSchema = new Schema({
   name: String,
-  vote: String, 
+  opinion: String,
   comment: String
 }, { timestamps: true });
 
@@ -46,4 +46,3 @@ const proposalSchema = new Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', proposalSchema);
-
