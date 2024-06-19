@@ -27,7 +27,7 @@ router.get('/:uniqueUrl', getProposal);
 router.get('/:id/firstRender', checkFirstRender);
 router.get('/:id/votes', getSubmittedVotes);
 router.post('/:id/vote', submitVote);
-router.put('/:id/vote', updateVote);
+router.put('/:id/votes/:voteId', updateVote);
 router.delete('/votes/:id', deleteVote);
 
 router.get('/example', getExampleProposal);
