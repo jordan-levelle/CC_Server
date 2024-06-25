@@ -17,6 +17,12 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   },
+  resetPasswordToken: {
+    type: String
+  },
+  resetPasswordExpires: {
+    type: Date
+  },
   verificationToken: String,
   participatedProposals: [{
     type: mongoose.Schema.Types.ObjectId,

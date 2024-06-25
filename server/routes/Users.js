@@ -9,7 +9,8 @@ const {
   updateUserEmail,
   getParticipatedProposals,
   checkVerificationStatus,
-  forgotUserPassword
+  forgotUserPassword,
+  resetForgotUserPassword
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -32,11 +33,14 @@ router.delete('/deleteUser', requireAuth, deleteUser);
 // Update email route
 router.put('/updateEmail', requireAuth, updateUserEmail);
 
-// Reset Password
+// Reset Old Password
 router.put('/resetPassword', requireAuth, resetUserPassword);
 
-// Forgot Password
+// Send Forgot Password Link
 router.post('/forgotPassword', forgotUserPassword);
+
+// Reset Forgot Password
+router.post('/resetForgotPassword', resetForgotUserPassword);
 
 // Get participated proposals route
 router.get('/participatedProposals', requireAuth, getParticipatedProposals);

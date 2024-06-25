@@ -123,6 +123,7 @@ const checkVerificationStatus = async (req, res) => {
   }
 };
 
+
 const deleteUser = async (req, res) => {
   const userId = req.user._id;
   const deleteProposals = req.body.deleteProposals || false;
@@ -140,6 +141,8 @@ const deleteUser = async (req, res) => {
   }
 };
 
+
+
 const updateUserEmail = async (req, res) => {
   const userId = req.user._id;
   const { email } = req.body;
@@ -155,7 +158,6 @@ const updateUserEmail = async (req, res) => {
 const resetUserPassword = async (req, res) => {
   const userId = req.user._id;
   const { oldPassword, newPassword } = req.body;
-
   try {
     // Find the user by ID
     const user = await User.findById(userId);
@@ -176,12 +178,40 @@ const resetUserPassword = async (req, res) => {
 
     // Save the updated user password
     await user.save();
+
+
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
     console.error(`Error resetting password for user ID ${userId}:`, error.message);
     res.status(500).json({ error: error.message });
   }
 };
+
+const resetForgotUserPassword = async (req, res) => {
+  const { token, newPassword} = req.body;
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    console.error('Error in resetUserPassword API:', error);
+    res.status(500).json({ error: 'An error occurred while resetting your password.' });
+  }
+};
+
 
 const forgotUserPassword = async (req, res) => {
   const { email } = req.body;
@@ -202,7 +232,7 @@ const forgotUserPassword = async (req, res) => {
     await user.save();
 
     // Create the password reset link
-    const resetLink = `${process.env.ORIGIN}reset/${resetToken}`;
+    const resetLink = `${process.env.ORIGIN}/reset/${resetToken}`;
     const emailSubject = 'Password Reset Request';
     const emailContent = `
       <p>You are receiving this because you (or someone else) have requested to reset the password for your account.</p>
@@ -221,6 +251,8 @@ const forgotUserPassword = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while processing your request' });
   }
 };
+
+
 
 const getParticipatedProposals = async (req, res) => {
   const userId = req.user._id;
@@ -244,6 +276,7 @@ module.exports = { signupUser,
                    deleteUser, 
                    updateUserEmail,
                    resetUserPassword,
-                   forgotUserPassword, 
+                   forgotUserPassword,
+                   resetForgotUserPassword, 
                    getParticipatedProposals,
                    checkVerificationStatus };
