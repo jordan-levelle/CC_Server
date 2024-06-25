@@ -3,7 +3,7 @@ const Proposal = require('../models/Proposal');
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { sendEmail, generateVerificationToken } = require('../utils/EmailUtils');
+const { sendEmail } = require('../utils/EmailUtils');
 
 
 const createToken = (_id) => {
@@ -52,7 +52,7 @@ const signupUser = async (req, res) => {
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    const verificationAndRedirectLink = `${process.env.ORIGIN}/verify/${verificationToken}`;
+    const verificationAndRedirectLink = `${process.env.ORIGIN}verify/${verificationToken}`;
     const emailSubject = 'Account Verification';
     const emailContent = `
       <p>Click the link below to verify your account and be redirected to your account page:</p>
@@ -232,7 +232,7 @@ const forgotUserPassword = async (req, res) => {
     await user.save();
 
     // Create the password reset link
-    const resetLink = `${process.env.ORIGIN}/reset/${resetToken}`;
+    const resetLink = `${process.env.ORIGIN}reset/${resetToken}`;
     const emailSubject = 'Password Reset Request';
     const emailContent = `
       <p>You are receiving this because you (or someone else) have requested to reset the password for your account.</p>
