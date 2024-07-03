@@ -8,6 +8,7 @@ const {
   resetUserPassword,
   updateUserEmail,
   getParticipatedProposals,
+  setParticipatedProposal,
   checkVerificationStatus,
   forgotUserPassword,
   resetForgotUserPassword
@@ -42,7 +43,10 @@ router.post('/forgotPassword', forgotUserPassword);
 // Reset Forgot Password
 router.post('/resetForgotPassword', resetForgotUserPassword);
 
+// POST participated proposals route
+router.post('/setParticipatedProposal', requireAuth, setParticipatedProposal);
+
 // Get participated proposals route
-router.get('/participatedProposals', requireAuth, getParticipatedProposals);
+router.get('/getParticipatedProposals', requireAuth, getParticipatedProposals);
 
 module.exports = router;

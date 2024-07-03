@@ -1,34 +1,21 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  verified: {
-    type: Boolean,
-    default: false
-  },
-  resetPasswordToken: {
-    type: String
-  },
-  resetPasswordExpires: {
-    type: Date
-  },
-  verificationToken: String,
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  verified: { type: Boolean, default: false },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  proposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal' }],
   participatedProposals: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Proposal'
-  }]
+    proposalId: { type: Schema.Types.ObjectId, ref: 'Proposal' },
+    voteId: { type: Schema.Types.ObjectId } // Reference to the vote within the Proposal
+  }],
+  verificationToken: String
 });
+
+module.exports = mongoose.model('User', userSchema);
 
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();

@@ -28,7 +28,6 @@ const getProposal = async (req, res) => {
   }
 };
 
-// proposalController.js
 const checkFirstRender = async (req, res) => {
   try {
     const proposal = await Proposal.findById(req.params.id);
@@ -44,7 +43,6 @@ const checkFirstRender = async (req, res) => {
 
     return res.json({ firstRender });
   } catch (error) {
-    // console.error('Error checking first render:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -60,7 +58,6 @@ const getExampleProposal = async (req, res) => {
 
     res.json(exampleProposal);
   } catch (error) {
-    // console.error('Error finding example proposal:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -69,31 +66,40 @@ const createProposal = async (req, res) => {
   const { title, description, name, email, uniqueUrl } = req.body;
 
   try {
-    const user_id = req.user ? req.user._id : null;
+    // Use DUMMY_USER if req.user is not available
+    const userId = req.user ? req.user._id : process.env.DUMMY_USER;
 
     const emailValue = email || null;
-    const nameValue = name || null;
-    const proposalData = { 
-      title, 
-      description, 
-      name: nameValue, 
-      email: emailValue, 
-      user_id, 
-      uniqueUrl,
+    const nameValue = name || 'Anonymous';
+    const proposalData = {
+      title,
+      description,
+      name: nameValue,
+      email: emailValue,
+      user_id: userId,
+      uniqueUrl
     };
 
     const proposal = await Proposal.create(proposalData);
 
+    if (userId !== process.env.DUMMY_USER) {
+      await User.findByIdAndUpdate(
+        userId,
+        { $push: { proposals: proposal._id } },
+        { new: true }
+      );
+    }
+
     if (emailValue) {
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
-      <p>You submitted a new proposal!</p>
+        <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
-        <p><strong>Submitted by:</strong> ${name || 'Anonymous'}</p>
+        <p><strong>Submitted by:</strong> ${nameValue}</p>
         <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         <p><a href="${process.env.ORIGIN}edit/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
-      
+
       await sendEmail(emailValue, emailSubject, emailContent);
     }
 
@@ -103,6 +109,11 @@ const createProposal = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+const isDummyUserId = (userId) => {
+  return userId === process.env.DUMMY_USER;
+};
+
 
 const deleteProposal = async (req, res) => {
   const { id } = req.params;
@@ -161,13 +172,6 @@ const submitVote = async (req, res) => {
   const { name, opinion, comment } = req.body;
 
   try {
-    let userId;
-    if (req.headers.authorization) {
-      const token = req.headers.authorization.split(' ')[1];
-      const decodedToken = jwt.verify(token, process.env.SECRET);
-      userId = decodedToken._id;
-    }
-
     const proposal = await Proposal.findById(id);
 
     if (!proposal) {
@@ -177,13 +181,7 @@ const submitVote = async (req, res) => {
     proposal.votes.push({ name, opinion, comment });
     await proposal.save();
 
-    if (userId) {
-      const user = await User.findById(userId);
-      if (user && !user.participatedProposals.includes(proposal._id)) {
-        user.participatedProposals.push(proposal._id);
-        await user.save();
-      }
-    }
+    const addedVote = proposal.votes[proposal.votes.length - 1];
 
     if (proposal.email) {
       const emailSubject = 'New Vote Submitted';
@@ -198,7 +196,7 @@ const submitVote = async (req, res) => {
       await sendEmail(proposal.email, emailSubject, emailContent);
     }
 
-    res.status(200).json({ message: 'Vote submitted successfully', proposal });
+    res.status(200).json({ message: 'Vote submitted successfully', proposal, addedVote });
   } catch (error) {
     console.error('Error submitting vote:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -206,33 +204,25 @@ const submitVote = async (req, res) => {
 };
 
 const updateVote = async (req, res) => {
-  const { id } = req.params; // Proposal ID
+  const { id } = req.params;
   const { _id, opinion, comment, name } = req.body;
 
-
-
   try {
-
     const proposal = await Proposal.findById(id);
 
     if (!proposal) {
-
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Use _id from the request body as voteId
-    const voteToUpdate = proposal.votes.id(_id); // Adjusted to use _id directly
+    const voteToUpdate = proposal.votes.id(_id);
     if (!voteToUpdate) {
-
       return res.status(404).json({ error: 'Vote not found' });
     }
-
 
     if (opinion !== undefined) voteToUpdate.opinion = opinion;
     if (comment !== undefined) voteToUpdate.comment = comment;
     if (name !== undefined) voteToUpdate.name = name;
     voteToUpdate.updatedAt = new Date();
-
 
     await proposal.save();
 
@@ -243,33 +233,24 @@ const updateVote = async (req, res) => {
   }
 };
 
-
-
-
-// DELETE user vote
 const deleteVote = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find the proposal containing the vote to be deleted
     const proposal = await Proposal.findOne({ 'votes._id': id });
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal containing the vote not found' });
     }
 
-    // Find the index of the vote to be deleted
     const voteIndex = proposal.votes.findIndex(vote => vote._id.toString() === id);
     if (voteIndex === -1) {
       return res.status(404).json({ error: 'Vote not found' });
     }
 
-    // Remove the vote from the proposal
     proposal.votes.splice(voteIndex, 1);
 
-    // Save the updated proposal
     await proposal.save();
 
-    // Return success message
     res.status(200).json({ message: 'Vote deleted successfully' });
   } catch (error) {
     console.error('Error deleting vote:', error);
@@ -277,19 +258,16 @@ const deleteVote = async (req, res) => {
   }
 };
 
-// GET Votes for Proposal
 const getSubmittedVotes = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find the proposal by ID
     const proposal = await Proposal.findById(id);
 
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Return the submitted votes
     res.status(200).json({ votes: proposal.votes });
   } catch (error) {
     console.error('Error fetching submitted votes:', error);

@@ -3,12 +3,11 @@ const Proposal = require('../models/Proposal');
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { sendEmail } = require('../utils/EmailUtils');
-
+const { sendEmail, generateVerificationToken } = require('../utils/EmailUtils');
 
 const createToken = (_id) => {
   return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '1d' });
-}
+};
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -32,7 +31,7 @@ const loginUser = async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-}
+};
 
 const crypto = require('crypto'); // Use for generating the token
 
@@ -44,7 +43,6 @@ const signupUser = async (req, res) => {
     if (userExists) {
       return res.status(400).json({ error: 'Email already in use' });
     }
-
 
     const newUser = await User.create({ email, password });
     const verificationToken = crypto.randomBytes(20).toString('hex'); // Generating a random token
@@ -67,7 +65,6 @@ const signupUser = async (req, res) => {
   }
 };
 
-
 const verifyUser = async (req, res) => {
   const { token } = req.params;
 
@@ -87,8 +84,6 @@ const verifyUser = async (req, res) => {
     // Mark the user as verified
     user.verified = true;
     await user.save();
-
-    
 
     // Optional: Delay token removal for a brief period
     setTimeout(async () => {
@@ -111,10 +106,8 @@ const checkVerificationStatus = async (req, res) => {
     const user = await User.findOne({ verificationToken: token });
 
     if (!user) {
-
       return res.status(404).json({ error: 'User not found' });
     }
-
 
     res.status(200).json({ verified: user.verified });
   } catch (error) {
@@ -122,7 +115,6 @@ const checkVerificationStatus = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while checking verification status' });
   }
 };
-
 
 const deleteUser = async (req, res) => {
   const userId = req.user._id;
@@ -141,35 +133,32 @@ const deleteUser = async (req, res) => {
   }
 };
 
-
-
 const updateUserEmail = async (req, res) => {
   const userId = req.user._id;
   const { email } = req.body;
 
   try {
     await User.findByIdAndUpdate(userId, { email });
-    res.status(200).json({ message: 'Email updated successfully'});
+    res.status(200).json({ message: 'Email updated successfully' });
   } catch (error) {
-    res.status(400).json({ error: error.message});
+    res.status(400).json({ error: error.message });
   }
-}
+};
 
 const resetUserPassword = async (req, res) => {
   const userId = req.user._id;
   const { oldPassword, newPassword } = req.body;
+
   try {
     // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
-   
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Check if the old password matches
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
-
       return res.status(400).json({ error: 'Incorrect old password' });
     }
 
@@ -179,7 +168,6 @@ const resetUserPassword = async (req, res) => {
     // Save the updated user password
     await user.save();
 
-
     res.json({ message: 'Password reset successfully' });
   } catch (error) {
     console.error(`Error resetting password for user ID ${userId}:`, error.message);
@@ -188,7 +176,8 @@ const resetUserPassword = async (req, res) => {
 };
 
 const resetForgotUserPassword = async (req, res) => {
-  const { token, newPassword} = req.body;
+  const { token, newPassword } = req.body;
+
   try {
     const user = await User.findOne({
       resetPasswordToken: token,
@@ -211,7 +200,6 @@ const resetForgotUserPassword = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while resetting your password.' });
   }
 };
-
 
 const forgotUserPassword = async (req, res) => {
   const { email } = req.body;
@@ -252,31 +240,89 @@ const forgotUserPassword = async (req, res) => {
   }
 };
 
+const setParticipatedProposal = async (req, res) => {
+  const { proposalId, voteId } = req.body;
 
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.proposals.some(p => p.toString() === proposalId)) {
+      return res.status(200).json({ success: true, message: 'Proposal is your own, not added to participated proposals.' });
+    }
+
+    const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === proposalId);
+
+    if (existingParticipation) {
+      // Check if voteId already exists
+      if (existingParticipation.voteId === voteId) {
+        // Remove the voteId when the same voteId is provided to delete
+        existingParticipation.voteId = null;
+      } else {
+        // Update existing participation with new voteId
+        existingParticipation.voteId = voteId;
+      }
+    } else {
+      // Add new participation
+      user.participatedProposals.push({ proposalId, voteId });
+    }
+
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Participated proposal updated successfully' });
+  } catch (error) {
+    console.error('Error updating participated proposals:', error.message);
+    res.status(500).json({ success: false, message: 'Error updating participated proposals' });
+  }
+};
 
 const getParticipatedProposals = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const user = await User.findById(userId).populate('participatedProposals');
+    const user = await User.findById(userId).populate({
+      path: 'participatedProposals.proposalId', // Populating proposals
+      model: 'Proposal',
+    });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json(user.participatedProposals);
+    // Fetch the specific votes for each participated proposal
+    const participatedProposalsWithVotes = await Promise.all(
+      user.participatedProposals.map(async (participation) => {
+        const proposal = participation.proposalId;
+        const vote = proposal.votes.id(participation.voteId);
+        return { 
+          proposalId: proposal._id, 
+          proposalTitle: proposal.title,
+          uniqueUrl: proposal.uniqueUrl,
+          vote 
+        };
+      })
+    );
+
+    res.status(200).json(participatedProposalsWithVotes);
   } catch (error) {
+    console.error('Error fetching participated proposals:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = { signupUser, 
-                   loginUser, 
-                   verifyUser, 
-                   deleteUser, 
-                   updateUserEmail,
-                   resetUserPassword,
-                   forgotUserPassword,
-                   resetForgotUserPassword, 
-                   getParticipatedProposals,
-                   checkVerificationStatus };
+module.exports = { 
+  signupUser, 
+  loginUser, 
+  verifyUser, 
+  deleteUser, 
+  updateUserEmail,
+  resetUserPassword,
+  forgotUserPassword,
+  resetForgotUserPassword, 
+  getParticipatedProposals,
+  setParticipatedProposal,
+  checkVerificationStatus 
+};
