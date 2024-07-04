@@ -70,7 +70,7 @@ const createProposal = async (req, res) => {
     const userId = req.user ? req.user._id : process.env.DUMMY_USER;
 
     const emailValue = email || null;
-    const nameValue = name || 'Anonymous';
+    const nameValue = name || null;
     const proposalData = {
       title,
       description,
