@@ -1,8 +1,8 @@
 const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const { htmlToText } = require('html-to-text');
+const { v4: uuidv4 } = require('uuid'); // Import uuid package
+
 const { sendEmail } = require('../utils/EmailUtils');
 
 const getProposals = async (req, res) => {
@@ -70,7 +70,7 @@ const createProposal = async (req, res) => {
     const userId = req.user ? req.user._id : process.env.DUMMY_USER;
 
     const emailValue = email || null;
-    const nameValue = name || null;
+    const nameValue = name || '';
     const proposalData = {
       title,
       description,
@@ -91,13 +91,14 @@ const createProposal = async (req, res) => {
     }
 
     if (emailValue) {
+      const uniqueId = uuidv4(); // Generate a UUID
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
         <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Submitted by:</strong> ${nameValue}</p>
         <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}edit/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
 
       await sendEmail(emailValue, emailSubject, emailContent);
@@ -109,11 +110,6 @@ const createProposal = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
-const isDummyUserId = (userId) => {
-  return userId === process.env.DUMMY_USER;
-};
-
 
 const deleteProposal = async (req, res) => {
   const { id } = req.params;
@@ -127,6 +123,11 @@ const deleteProposal = async (req, res) => {
   if (!proposal) {
     return res.status(400).json({ error: 'No such proposal' });
   }
+
+  await User.updateMany(
+    { proposals: id },
+    { $pull: { proposals: id } }
+  );
 
   res.status(200).json(proposal);
 };
