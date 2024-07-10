@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt'); // Ensure bcrypt is required
+const crypto = require('crypto');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -15,8 +17,7 @@ const userSchema = new Schema({
   verificationToken: String
 });
 
-module.exports = mongoose.model('User', userSchema);
-
+// Password hashing middleware
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   try {

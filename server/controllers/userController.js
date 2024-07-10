@@ -44,13 +44,13 @@ const signupUser = async (req, res) => {
       return res.status(400).json({ error: 'Email already in use' });
     }
 
-    const newUser = await User.create({ email, password });
+    const newUser = new User({ email, password });
     const verificationToken = crypto.randomBytes(20).toString('hex'); // Generating a random token
 
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    const verificationAndRedirectLink = `${process.env.ORIGIN}verify/${verificationToken}`;
+    const verificationAndRedirectLink = `${process.env.ORIGIN}/verify/${verificationToken}`;
     const emailSubject = 'Account Verification';
     const emailContent = `
       <p>Click the link below to verify your account and be redirected to your account page:</p>
