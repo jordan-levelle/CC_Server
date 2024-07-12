@@ -17,7 +17,12 @@ const proposalSchema = new Schema({
   user_id: { type: String, required: true },
   uniqueUrl: { type: String, required: true, unique: true },
   firstRender: { type: Boolean, default: true },
-  votes: [voteSchema]
+  votes: [voteSchema],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 2592000 // 30 days
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', proposalSchema);
