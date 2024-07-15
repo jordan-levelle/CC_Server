@@ -313,6 +313,28 @@ const getParticipatedProposals = async (req, res) => {
   }
 };
 
+async function cleanupExpiredParticipatedProposals() {
+  try {
+    const users = await User.find({'participatedProposals' : {$exits: true, $not: { $size: 0 } } });
+      for (let user of users) {
+        const updatedParticipatedProposals = user.participatedProposals.filter( async ( participation) => {
+          const proposal = await Proposal.findById(participation.proposalId);
+
+          if (proposal && proposal.createdAt >= new Date(new Date() - 30 * 24 * 60 * 60 * 1000 )) {
+          } else {
+              return false;
+            }
+          
+        });
+        user.participatedProposals = updatedParticipatedProposals;
+        await isErrored.save();
+      }
+      console.log('Cleanup completed success');
+  } catch (error) {
+    console.error('Cleanup failed', error)
+  }
+}
+
 module.exports = { 
   signupUser, 
   loginUser, 
@@ -324,5 +346,6 @@ module.exports = {
   resetForgotUserPassword, 
   getParticipatedProposals,
   setParticipatedProposal,
-  checkVerificationStatus 
+  checkVerificationStatus,
+  cleanupExpiredParticipatedProposals 
 };
