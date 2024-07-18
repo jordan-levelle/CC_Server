@@ -250,10 +250,6 @@ const setParticipatedProposal = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (user.proposals.some(p => p.toString() === proposalId)) {
-      return res.status(200).json({ success: true, message: 'Proposal is your own, not added to participated proposals.' });
-    }
-
     const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === proposalId);
 
     if (existingParticipation) {
@@ -279,12 +275,14 @@ const setParticipatedProposal = async (req, res) => {
   }
 };
 
+
 const getParticipatedProposals = async (req, res) => {
   const userId = req.user._id;
+  const { includeOwnProposals } = req.query; // Add a query parameter to include own proposals
 
   try {
     const user = await User.findById(userId).populate({
-      path: 'participatedProposals.proposalId', // Populating proposals
+      path: 'participatedProposals.proposalId',
       model: 'Proposal',
     });
 
@@ -292,26 +290,31 @@ const getParticipatedProposals = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Fetch the specific votes for each participated proposal
-    const participatedProposalsWithVotes = await Promise.all(
-      user.participatedProposals.map(async (participation) => {
-        const proposal = participation.proposalId;
-        const vote = proposal.votes.id(participation.voteId);
-        return { 
-          proposalId: proposal._id, 
-          proposalTitle: proposal.title,
-          uniqueUrl: proposal.uniqueUrl,
-          vote 
-        };
-      })
-    );
+    let participatedProposals = user.participatedProposals.map(participation => {
+      const proposal = participation.proposalId;
+      const vote = proposal.votes.id(participation.voteId);
+      return { 
+        proposalId: proposal._id, 
+        proposalTitle: proposal.title,
+        uniqueUrl: proposal.uniqueUrl,
+        vote 
+      };
+    });
 
-    res.status(200).json(participatedProposalsWithVotes);
+    if (includeOwnProposals === 'false') {
+      // Exclude the user's own proposals
+      participatedProposals = participatedProposals.filter(participation =>
+        !user.proposals.some(p => p.toString() === participation.proposalId.toString())
+      );
+    }
+
+    res.status(200).json(participatedProposals);
   } catch (error) {
     console.error('Error fetching participated proposals:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 async function cleanupExpiredParticipatedProposals() {
   try {
