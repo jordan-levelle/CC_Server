@@ -240,6 +240,7 @@ const forgotUserPassword = async (req, res) => {
   }
 };
 
+
 const setParticipatedProposal = async (req, res) => {
   const { proposalId, voteId } = req.body;
 
@@ -292,14 +293,19 @@ const getParticipatedProposals = async (req, res) => {
 
     let participatedProposals = user.participatedProposals.map(participation => {
       const proposal = participation.proposalId;
-      const vote = proposal.votes.id(participation.voteId);
+      if (!proposal) {
+        // If the proposal is null, skip this participation
+        // ***Fix for Produced Error On 7/17 Cannot read properties of null(trying to access null votes)
+        return null;
+      }
+      const vote = proposal.votes ? proposal.votes.id(participation.voteId) : null;
       return { 
         proposalId: proposal._id, 
         proposalTitle: proposal.title,
         uniqueUrl: proposal.uniqueUrl,
         vote 
       };
-    });
+    }).filter(participation => participation !== null);
 
     if (includeOwnProposals === 'false') {
       // Exclude the user's own proposals
