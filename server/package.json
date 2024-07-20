@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A Group Consensus Web Application",
   "engines": {
-    "node": ">=10.0.0"
+    "node": "20.x"
   },
   "main": "server.js",
   "scripts": {

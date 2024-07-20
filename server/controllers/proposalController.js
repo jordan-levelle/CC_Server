@@ -167,6 +167,32 @@ const deleteProposalsByUser = async (userId) => {
   }
 };
 
+const updateProposal = async (req, res) => {
+  const { uniqueUrl } = req.params;
+  const { title, description, name, email, receiveNotifications } = req.body;
+
+  try {
+    const proposal = await Proposal.findOne({ uniqueUrl });
+
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    proposal.title = title;
+    proposal.description = description;
+    proposal.name = name;
+    proposal.email = email;
+    proposal.receiveNotifications = receiveNotifications;
+
+    await proposal.save();
+
+    res.json(proposal);
+  } catch (error) {
+    console.error('Error updating proposal:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 const submitVote = async (req, res) => {
   const { id } = req.params;
