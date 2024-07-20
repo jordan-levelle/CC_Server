@@ -241,6 +241,7 @@ const forgotUserPassword = async (req, res) => {
 };
 
 
+
 const setParticipatedProposal = async (req, res) => {
   const { proposalId, voteId } = req.body;
 
