@@ -140,6 +140,7 @@ const deleteProposal = async (req, res) => {
   res.status(200).json(proposal);
 };
 
+
 const deleteProposalsByUser = async (userId) => {
   try {
     const proposals = await Proposal.find({ user_id: userId });
