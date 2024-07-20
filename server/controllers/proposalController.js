@@ -111,6 +111,7 @@ const createProposal = async (req, res) => {
   }
 };
 
+
 const deleteProposal = async (req, res) => {
   const { id } = req.params;
 
@@ -124,9 +125,16 @@ const deleteProposal = async (req, res) => {
     return res.status(400).json({ error: 'No such proposal' });
   }
 
+  // Remove the proposal ID from users' proposals
   await User.updateMany(
     { proposals: id },
     { $pull: { proposals: id } }
+  );
+
+  // Remove the proposal ID from users' participatedProposals
+  await User.updateMany(
+    { 'participatedProposals.proposalId': id },
+    { $pull: { participatedProposals: { proposalId: id } } }
   );
 
   res.status(200).json(proposal);
@@ -134,7 +142,23 @@ const deleteProposal = async (req, res) => {
 
 const deleteProposalsByUser = async (userId) => {
   try {
+    const proposals = await Proposal.find({ user_id: userId });
+    const proposalIds = proposals.map(proposal => proposal._id);
+
     const deleteResult = await Proposal.deleteMany({ user_id: userId });
+
+    // Remove the proposal IDs from users' proposals
+    await User.updateMany(
+      { proposals: { $in: proposalIds } },
+      { $pull: { proposals: { $in: proposalIds } } }
+    );
+
+    // Remove the proposal IDs from users' participatedProposals
+    await User.updateMany(
+      { 'participatedProposals.proposalId': { $in: proposalIds } },
+      { $pull: { participatedProposals: { proposalId: { $in: proposalIds } } } }
+    );
+
     return deleteResult;
   } catch (error) {
     console.error('Error deleting proposals:', error);
@@ -142,31 +166,6 @@ const deleteProposalsByUser = async (userId) => {
   }
 };
 
-const updateProposal = async (req, res) => {
-  const { uniqueUrl } = req.params;
-  const { title, description, name, email, receiveNotifications } = req.body;
-
-  try {
-    const proposal = await Proposal.findOne({ uniqueUrl });
-
-    if (!proposal) {
-      return res.status(404).json({ error: 'Proposal not found' });
-    }
-
-    proposal.title = title;
-    proposal.description = description;
-    proposal.name = name;
-    proposal.email = email;
-    proposal.receiveNotifications = receiveNotifications;
-
-    await proposal.save();
-
-    res.json(proposal);
-  } catch (error) {
-    console.error('Error updating proposal:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
 
 const submitVote = async (req, res) => {
   const { id } = req.params;
