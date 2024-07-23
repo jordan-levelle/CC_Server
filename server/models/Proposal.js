@@ -21,7 +21,11 @@ const proposalSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 2592000 // 30 days
+    // expires: 2592000 // 30 days
+  },
+  expired: {
+    type: Boolean,
+    default: false,
   }
 }, { timestamps: true });
 

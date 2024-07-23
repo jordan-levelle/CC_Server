@@ -5,6 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
+const propTTLScheduler = require('./utils/Scheduler.js');
 
 
 // express app
@@ -32,6 +33,8 @@ app.use('/api/user', userRoutes);
 // connect to db
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
+
+    propTTLScheduler();
     // listen for requests
     app.listen(process.env.PORT || 3000, () => {
       console.log('connected to db & listening on port', process.env.PORT)

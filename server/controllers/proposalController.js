@@ -5,10 +5,22 @@ const { v4: uuidv4 } = require('uuid'); // Import uuid package
 
 const { sendEmail } = require('../utils/EmailUtils');
 
-const getProposals = async (req, res) => {
+const getAllProposals = async (req, res) => {
   const user_id = req.user._id;
   const proposals = await Proposal.find({ user_id }).sort({ createdAt: -1 });
   res.status(200).json(proposals);
+};
+
+const getActiveProposals = async (req,res) => {
+  const user_id = req.user._id;
+  const activeProposals = await Proposal.find({ user_id, expired: false}).sort({ created: -1});
+  res.status(200).json(activeProposals);
+};
+
+const getExpiredProposals = async (req,res) => {
+  const user_id = req.user._id;
+  const expiredProposals = await Proposal.find({ user_id, expired: true}).sort({ created: -1});
+  res.status(200).json(expiredProposals);
 };
 
 const getProposal = async (req, res) => {
@@ -97,8 +109,8 @@ const createProposal = async (req, res) => {
         <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Submitted by:</strong> ${nameValue}</p>
-        <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
 
       await sendEmail(emailValue, emailSubject, emailContent);
@@ -217,7 +229,7 @@ const submitVote = async (req, res) => {
         <p><strong>Submitted by:</strong> ${name}</p>
         <p><strong>Vote:</strong> ${opinion}</p>
         <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}/${proposal.uniqueUrl}">View Proposal</a></p>
       `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
@@ -304,7 +316,9 @@ const getSubmittedVotes = async (req, res) => {
 
 module.exports = {
   createProposal,
-  getProposals,
+  getActiveProposals,
+  getExpiredProposals,
+  getAllProposals,
   getProposal,
   checkFirstRender,
   deleteProposal,
