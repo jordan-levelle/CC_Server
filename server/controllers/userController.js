@@ -50,7 +50,7 @@ const signupUser = async (req, res) => {
     newUser.verificationToken = verificationToken;
     await newUser.save();
 
-    const verificationAndRedirectLink = `${process.env.ORIGIN}/verify/${verificationToken}`;
+    const verificationAndRedirectLink = `${process.env.ORIGIN}verify/${verificationToken}`;
     const emailSubject = 'Account Verification';
     const emailContent = `
       <p>Click the link below to verify your account and be redirected to your account page:</p>
@@ -323,27 +323,31 @@ const getParticipatedProposals = async (req, res) => {
 };
 
 
-async function cleanupExpiredParticipatedProposals() {
-  try {
-    const users = await User.find({'participatedProposals' : {$exits: true, $not: { $size: 0 } } });
-      for (let user of users) {
-        const updatedParticipatedProposals = user.participatedProposals.filter( async ( participation) => {
-          const proposal = await Proposal.findById(participation.proposalId);
+const removeParticipatedProposal = async (req, res) => {
+  const { id } = req.params; // The proposal ID to be removed
+  const user_id = req.user._id; // The authenticated user's ID
 
-          if (proposal && proposal.createdAt >= new Date(new Date() - 30 * 24 * 60 * 60 * 1000 )) {
-          } else {
-              return false;
-            }
-          
-        });
-        user.participatedProposals = updatedParticipatedProposals;
-        await isErrored.save();
-      }
-      console.log('Cleanup completed success');
+  try {
+    const user = await User.findOneAndUpdate(
+      { _id: user_id },
+      { $pull: { participatedProposals: { proposalId: id } } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'Participated proposal not found' });
+    }
+
+    res.status(200).json({ message: 'Participated proposal removed successfully' });
   } catch (error) {
-    console.error('Cleanup failed', error)
+    res.status(500).json({ error: error.message });
   }
+};
+
+const makeSubscriptionPayment = async (req, res) => {
+  const user_id  = reg.user._id;
 }
+
 
 module.exports = { 
   signupUser, 
@@ -351,11 +355,12 @@ module.exports = {
   verifyUser, 
   deleteUser, 
   updateUserEmail,
+  makeSubscriptionPayment,
   resetUserPassword,
   forgotUserPassword,
   resetForgotUserPassword, 
   getParticipatedProposals,
   setParticipatedProposal,
+  removeParticipatedProposal,
   checkVerificationStatus,
-  cleanupExpiredParticipatedProposals 
 };
