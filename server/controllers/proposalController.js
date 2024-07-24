@@ -109,8 +109,8 @@ const createProposal = async (req, res) => {
         <p>You submitted a new proposal!</p>
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Submitted by:</strong> ${nameValue}</p>
-        <p><a href="${process.env.ORIGIN}/${uniqueUrl}">Link to Proposal</a></p>
-        <p><a href="${process.env.ORIGIN}/edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
 
       await sendEmail(emailValue, emailSubject, emailContent);
@@ -229,7 +229,7 @@ const submitVote = async (req, res) => {
         <p><strong>Submitted by:</strong> ${name}</p>
         <p><strong>Vote:</strong> ${opinion}</p>
         <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}/${proposal.uniqueUrl}">View Proposal</a></p>
+        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
       `;
 
       await sendEmail(proposal.email, emailSubject, emailContent);
