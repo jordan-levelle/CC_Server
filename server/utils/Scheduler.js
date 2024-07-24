@@ -4,7 +4,7 @@ const Proposal = require('../models/Proposal');
 const TTL = 30 * 24 * 60 * 60 * 1000;
 
 const propTTLScheduler = () => {
-    cron.schedule('*/5 * * * *', async () => { // runs every 5 minutes
+    cron.schedule('0 0 * * *', async () => { // runs every 5 minutes
         const now = new Date();
         const expirationTime = new Date(now - TTL);
     
