@@ -17,21 +17,17 @@ const sendEmail = async (to, subject, htmlContent) => {
     const plainTextContent = htmlToText(htmlContent, { wordwrap: 130 });
 
     const info = await transporter.sendMail({
-      from: '"Consensus Check" <notifications@consensuscheck.com>', // Update with your sender email address
+      from: '"Consensus Check" <notifications@consensuscheck.com>', 
       to: to,
       subject: subject,
       text: plainTextContent, // Convert HTML to plain text
       html: htmlContent,
     });
 
-    // console.log('Message sent: %s', info.messageId);
-    // console.log('Email sent to: %s', to); 
   } catch (error) {
     console.error('Error sending email:', error);
   }
 };
-
-
 
 // Function to generate a verification token based on user ID
 const generateVerificationToken = (userId) => {

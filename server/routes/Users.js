@@ -8,6 +8,7 @@ const {
   resetUserPassword,
   updateUserEmail,
   makeSubscriptionPayment,
+  cancelSubscription,
   getParticipatedProposals,
   setParticipatedProposal,
   removeParticipatedProposal,
@@ -54,6 +55,10 @@ router.get('/getParticipatedProposals', requireAuth, getParticipatedProposals);
 // Remove partipated proposal route
 router.delete('/removeParticipatedProposal/:id', requireAuth, removeParticipatedProposal);
 
+// User Upgrade Checkout Session route
 router.post('/makePayment', requireAuth, makeSubscriptionPayment);
+
+// User Cancel Subscription route
+router.post('/cancel-subscription', requireAuth, cancelSubscription)
 
 module.exports = router;

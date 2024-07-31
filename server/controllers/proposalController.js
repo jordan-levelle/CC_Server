@@ -1,8 +1,7 @@
 const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid'); // Import uuid package
-
+const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail } = require('../utils/EmailUtils');
 
 const getAllProposals = async (req, res) => {
@@ -59,7 +58,6 @@ const checkFirstRender = async (req, res) => {
   }
 };
 
-
 const getExampleProposal = async (req, res) => {
   try {
     const exampleProposal = await Proposal.findOne({ isExample: true });
@@ -103,7 +101,7 @@ const createProposal = async (req, res) => {
     }
 
     if (emailValue) {
-      const uniqueId = uuidv4(); // Generate a UUID
+      const uniqueId = uuidv4(); 
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
         <p>You submitted a new proposal!</p>
@@ -137,13 +135,13 @@ const deleteProposal = async (req, res) => {
     return res.status(400).json({ error: 'No such proposal' });
   }
 
-  // Remove the proposal ID from users' proposals
+  // Remove the proposal ID from users proposals
   await User.updateMany(
     { proposals: id },
     { $pull: { proposals: id } }
   );
 
-  // Remove the proposal ID from users' participatedProposals
+  // Remove the proposal ID from users participatedProposals
   await User.updateMany(
     { 'participatedProposals.proposalId': id },
     { $pull: { participatedProposals: { proposalId: id } } }
@@ -160,13 +158,13 @@ const deleteProposalsByUser = async (userId) => {
 
     const deleteResult = await Proposal.deleteMany({ user_id: userId });
 
-    // Remove the proposal IDs from users' proposals
+    // Remove the proposal IDs from users proposals
     await User.updateMany(
       { proposals: { $in: proposalIds } },
       { $pull: { proposals: { $in: proposalIds } } }
     );
 
-    // Remove the proposal IDs from users' participatedProposals
+    // Remove the proposal IDs from users participatedProposals
     await User.updateMany(
       { 'participatedProposals.proposalId': { $in: proposalIds } },
       { $pull: { participatedProposals: { proposalId: { $in: proposalIds } } } }
@@ -204,7 +202,6 @@ const updateProposal = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 const submitVote = async (req, res) => {
   const { id } = req.params;

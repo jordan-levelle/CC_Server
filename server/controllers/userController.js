@@ -1,9 +1,10 @@
 const User = require('../models/User');
-const Proposal = require('../models/Proposal');
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto'); 
 const jwt = require('jsonwebtoken');
-const { sendEmail, generateVerificationToken } = require('../utils/EmailUtils');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { sendEmail } = require('../utils/EmailUtils');
 
 const createToken = (_id) => {
   return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '1d' });
@@ -27,13 +28,15 @@ const loginUser = async (req, res) => {
 
     const token = createToken(user._id);
 
-    res.status(200).json({ email, token });
+    res.status(200).json({
+      email,
+      token,
+      subscriptionStatus: user.subscriptionStatus // Include subscriptionStatus
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
-
-const crypto = require('crypto'); // Use for generating the token
 
 const signupUser = async (req, res) => {
   const { email, password } = req.body;
@@ -58,7 +61,7 @@ const signupUser = async (req, res) => {
     `;
     await sendEmail(email, emailSubject, emailContent);
 
-    const token = createToken(newUser._id); // JWT for authentication
+    const token = createToken(newUser._id); 
     res.status(201).json({ email, token, verificationToken });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -85,11 +88,11 @@ const verifyUser = async (req, res) => {
     user.verified = true;
     await user.save();
 
-    // Optional: Delay token removal for a brief period
+    // Delay token removal for a brief period
     setTimeout(async () => {
       user.verificationToken = undefined;
       await user.save();
-    }, 120000); // Delay for 1 minute (adjust as needed)
+    }, 120000); // Delay for 1 minute 
 
     res.status(200).json({ message: 'Account verified successfully' });
   } catch (error) {
@@ -240,8 +243,6 @@ const forgotUserPassword = async (req, res) => {
   }
 };
 
-
-
 const setParticipatedProposal = async (req, res) => {
   const { proposalId, voteId } = req.body;
 
@@ -277,10 +278,9 @@ const setParticipatedProposal = async (req, res) => {
   }
 };
 
-
 const getParticipatedProposals = async (req, res) => {
   const userId = req.user._id;
-  const { includeOwnProposals } = req.query; // Add a query parameter to include own proposals
+  const { includeOwnProposals } = req.query; 
 
   try {
     const user = await User.findById(userId).populate({
@@ -322,7 +322,6 @@ const getParticipatedProposals = async (req, res) => {
   }
 };
 
-
 const removeParticipatedProposal = async (req, res) => {
   const { id } = req.params; // The proposal ID to be removed
   const user_id = req.user._id; // The authenticated user's ID
@@ -345,9 +344,80 @@ const removeParticipatedProposal = async (req, res) => {
 };
 
 const makeSubscriptionPayment = async (req, res) => {
-  const user_id  = reg.user._id;
-}
+  const { priceId } = req.body;
 
+  // Find the user in the database
+  let user = req.user; // User is already attached to the request by requireAuth middleware
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  // Create a Stripe customer if not already exists
+  let customerId = user.stripeCustomerId;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+    });
+    customerId = customer.id;
+    user.stripeCustomerId = customerId;
+    await user.save();
+  } else {
+    console.log('Existing Stripe customer ID:', customerId);
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      customer: customerId,
+      line_items: [
+        {
+          price: 'price_1PdwW3DfXxf0bxwGjLCd8htC',
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${process.env.ORIGIN}?success=true`,
+      cancel_url: `${process.env.ORIGIN}?canceled=true`,
+    });
+
+    // Send back only the session URL for redirection
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating Stripe session:', error);
+    res.status(500).json({ error: 'Failed to create Stripe session' });
+  }
+};
+
+const cancelSubscription  = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.stripeSubscriptionId) {
+      return res.status(400).json({ message: 'No subscription found' });
+    }
+
+    // Cancel the Stripe subscription
+    const subscription = await stripe.subscriptions.del(user.stripeSubscriptionId);
+
+    if (subscription.status === 'canceled') {
+      user.subscriptionStatus = false;
+      user.stripeSubscriptionId = null;
+      await user.save();
+
+      res.status(200).json({ message: 'Subscription cancelled successfully', subscriptionStatus: user.subscriptionStatus });
+    } else {
+      res.status(500).json({ message: 'Failed to cancel subscription' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
 module.exports = { 
   signupUser, 
@@ -356,6 +426,7 @@ module.exports = {
   deleteUser, 
   updateUserEmail,
   makeSubscriptionPayment,
+  cancelSubscription,
   resetUserPassword,
   forgotUserPassword,
   resetForgotUserPassword, 

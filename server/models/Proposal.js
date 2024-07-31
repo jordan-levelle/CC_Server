@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
  
-
 const voteSchema = new Schema({
   name: String,
   opinion: String,
@@ -21,11 +20,7 @@ const proposalSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    // expires: 2592000 // 30 days
-  },
-  expired: {
-    type: Boolean,
-    default: false,
+    expires: 2592000 // 30 days
   }
 }, { timestamps: true });
 

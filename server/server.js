@@ -1,25 +1,20 @@
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const propTTLScheduler = require('./utils/Scheduler.js');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
-const propTTLScheduler = require('./utils/Scheduler.js');
-
+const webhookRoutes = require('./webhooks/webhookHandler');
 
 // express app
 const app = express();
 
-// middleware
-app.use(express.json());
-
 // Enable CORS
 app.use(cors());
 
-app.use((req, res, next) => {
-  next()
-});
+// Use JSON middleware globally, but not for webhooks
+app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
 
 // Root path route
 app.get('/', (req, res) => {
@@ -29,13 +24,13 @@ app.get('/', (req, res) => {
 // routes
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
 
     propTTLScheduler();
-    // listen for requests
     app.listen(process.env.PORT || 3000, () => {
       console.log('connected to db & listening on port', process.env.PORT)
     })
