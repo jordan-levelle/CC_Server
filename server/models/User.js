@@ -15,7 +15,7 @@ const userSchema = new Schema({
   }],
   verificationToken: String,
   stripeCustomerId: { type: String },
-  subscriptionId: { type: String },
+  stripeSubscriptionId: { type: String },
   subscriptionStatus: { type: Boolean, default: false } 
 });
 
