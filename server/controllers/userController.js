@@ -398,16 +398,16 @@ const cancelSubscription  = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (!user.stripeSubscriptionId) {
+    if (!user.subscriptionId) {
       return res.status(400).json({ message: 'No subscription found' });
     }
 
     // Cancel the Stripe subscription
-    const subscription = await stripe.subscriptions.del(user.stripeSubscriptionId);
+    const subscription = await stripe.subscriptions.del(user.subscriptionId);
 
     if (subscription.status === 'canceled') {
       user.subscriptionStatus = false;
-      user.stripeSubscriptionId = null;
+      user.subscriptionId = null;
       await user.save();
 
       res.status(200).json({ message: 'Subscription cancelled successfully', subscriptionStatus: user.subscriptionStatus });
