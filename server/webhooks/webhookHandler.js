@@ -26,7 +26,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
         const user = await User.findOne({ stripeCustomerId: customerId });
         if (user) {
           user.subscriptionStatus = true;
-          user.subscriptionId = session.subscription;
+          user.stripeSubscriptionId = session.subscription;
           await user.save();
         }
       } catch (error) {
@@ -43,7 +43,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
         const user = await User.findOne({ stripeCustomerId: customerId });
         if (user) {
           user.subscriptionStatus = false;
-          user.subscriptionId = null;
+          user.stripeSubscriptionId = null;
           await user.save();
         }
       } catch (error) {
