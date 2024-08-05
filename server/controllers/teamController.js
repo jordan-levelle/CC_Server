@@ -1,4 +1,4 @@
-const Team = require('../models/Team');
+const Team = require('../models/Teams');
 const User = require('../models/User');
 
 const createTeam = async (req, res) => {
