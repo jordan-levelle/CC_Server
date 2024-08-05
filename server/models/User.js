@@ -13,10 +13,13 @@ const userSchema = new Schema({
     proposalId: { type: Schema.Types.ObjectId, ref: 'Proposal' },
     voteId: { type: Schema.Types.ObjectId } // Reference to the vote within the Proposal
   }],
+  userTeams: [{
+    teamId: { type: Schema.Types.ObjectId, ref: 'Teams' },
+  }],
   verificationToken: String,
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },
-  subscriptionStatus: { type: Boolean, default: false } 
+  subscriptionStatus: { type: Boolean, default: false }
 });
 
 // Password hashing pre-save userSchema
@@ -32,3 +35,4 @@ userSchema.pre('save', async function(next) {
 });
 
 module.exports = mongoose.model('User', userSchema);
+

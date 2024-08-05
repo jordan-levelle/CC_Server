@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const propTTLScheduler = require('./utils/Scheduler.js');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
+const teamRoutes = require('./routes/Teams.js')
 const webhookRoutes = require('./webhooks/webhookHandler');
 
 // express app
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 // routes
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
 // connect to db
