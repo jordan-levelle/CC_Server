@@ -6,13 +6,17 @@ const requireAuth = async (req, res, next) => {
   try {
     let user = null;
 
+    console.log('Authorization header:', authorization);
+
     if (authorization) {
       const token = authorization.split(' ')[1];
+      console.log('Extracted token:', token);
 
       if (token && token !== process.env.DUMMY_TOKEN) {
         const decodedToken = jwt.verify(token, process.env.SECRET);
 
-        // Check if the token has expired
+        console.log('Decoded token:', decodedToken);
+
         if (decodedToken.exp * 1000 < Date.now()) {
           throw new Error('Token expired');
         }
@@ -28,6 +32,7 @@ const requireAuth = async (req, res, next) => {
       }
     }
 
+    console.log('User set in request:', user);
     req.user = user; // Set user object in request
     next();
   } catch (error) {
@@ -42,3 +47,6 @@ const requireAuth = async (req, res, next) => {
 };
 
 module.exports = requireAuth;
+
+
+
