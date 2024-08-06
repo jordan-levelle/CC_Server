@@ -10,8 +10,8 @@ const {
  } = require('../controllers/teamController');
 
 router.post('/createUserTeam', requireAuth, checkSubscription, createTeam);
-router.post('/editUserTeam', requireAuth, checkSubscription, editTeam);
-router.post('/deleteUserTeam', requireAuth, checkSubscription, deleteTeam);
-router.post('/viewUserTeamList', requireAuth, checkSubscription, teamList);
+router.put('/editUserTeam', requireAuth, checkSubscription, editTeam);
+router.delete('/deleteUserTeam', requireAuth, checkSubscription, deleteTeam);
+router.get('/viewUserTeamList', requireAuth, checkSubscription, teamList);
 
 module.exports = router;
