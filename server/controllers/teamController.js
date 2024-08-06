@@ -85,15 +85,22 @@ const deleteTeam = async (req, res) => {
     const userId = req.user._id;
   
     try {
-      const user = await User.findById(userId).populate('userTeams.teamId');
+      const user = await User.findById(userId).populate({
+        path: 'userTeams.teamId',
+        model: 'Teams'
+      });
+  
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
   
       const teams = user.userTeams.map(userTeam => userTeam.teamId);
   
+      console.log('Fetched Teams:', teams); // Debugging log
+  
       res.status(200).json({ message: 'Teams fetched successfully', teams });
     } catch (error) {
+      console.error('Error fetching teams:', error); // Debugging log
       res.status(500).json({ message: 'Internal server error', error });
     }
   };
