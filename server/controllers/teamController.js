@@ -16,7 +16,7 @@ const createTeam = async (req, res) => {
 
     // Add the team reference to the user document
     const user = await User.findById(userId);
-    user.userTeams.push({ teamId: team._id });
+    user.userTeams.push({ _id: team._id });
     await user.save();
 
     res.status(201).json({ message: 'Team created successfully', team });
@@ -24,6 +24,7 @@ const createTeam = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error });
   }
 };
+
 
 const deleteTeam = async (req, res) => {
   const { teamId } = req.params;
@@ -89,16 +90,13 @@ const deleteTeam = async (req, res) => {
     const userId = req.user._id;
   
     try {
-      const user = await User.findById(userId).populate({
-        path: 'userTeams.teamId',
-        model: 'Teams'
-      });
+      const user = await User.findById(userId).populate('userTeams._id', 'teamName members');
   
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      const teams = user.userTeams.map(userTeam => userTeam.teamId);
+      const teams = user.userTeams.map(userTeam => userTeam._id);
   
       console.log('Fetched Teams:', teams); // Debugging log
   
@@ -108,6 +106,7 @@ const deleteTeam = async (req, res) => {
       res.status(500).json({ message: 'Internal server error', error });
     }
   };
+  
 
 module.exports = { 
     createTeam, 
