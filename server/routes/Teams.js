@@ -11,7 +11,7 @@ const {
 
 router.post('/createUserTeam', requireAuth, checkSubscription, createTeam);
 router.put('/editUserTeam', requireAuth, checkSubscription, editTeam);
-router.delete('/deleteUserTeam', requireAuth, checkSubscription, deleteTeam);
+router.delete('/deleteUserTeam/:teamId', requireAuth, checkSubscription, deleteTeam);
 router.get('/viewUserTeamList', requireAuth, checkSubscription, teamList);
 
 module.exports = router;
