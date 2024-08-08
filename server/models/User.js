@@ -14,7 +14,7 @@ const userSchema = new Schema({
     voteId: { type: Schema.Types.ObjectId } // Reference to the vote within the Proposal
   }],
   userTeams: [{
-    teamId: { type: Schema.Types.ObjectId, ref: 'Teams' },
+    _id: { type: Schema.Types.ObjectId, ref: 'Team' },  // Store the reference to the team using `_id`
   }],
   verificationToken: String,
   stripeCustomerId: { type: String },
