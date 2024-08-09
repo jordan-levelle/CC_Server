@@ -403,7 +403,7 @@ const cancelSubscription  = async (req, res) => {
     }
 
     // Cancel the Stripe subscription
-    const subscription = await stripe.cancelSubscription(user.stripeSubscriptionId);
+    const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
 
     if (subscription.status === 'canceled') {
       user.subscriptionStatus = false;
