@@ -16,6 +16,7 @@ const userSchema = new Schema({
   userTeams: [{
     _id: { type: Schema.Types.ObjectId, ref: 'Team' },  // Store the reference to the team using `_id`
   }],
+  
   verificationToken: String,
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },

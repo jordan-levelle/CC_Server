@@ -85,13 +85,15 @@ const deleteTeam = async (req, res) => {
     }
   };
 
-
   const teamList = async (req, res) => {
     const userId = req.user._id;
   
     try {
-      const user = await User.findById(userId).populate('userTeams._id', 'teamName members');
-  
+      const user = await User.findById(userId).populate({
+        path: 'userTeams._id',
+        select: 'teamName members',
+      });
+      
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -102,10 +104,11 @@ const deleteTeam = async (req, res) => {
   
       res.status(200).json({ message: 'Teams fetched successfully', teams });
     } catch (error) {
-      console.error('Error fetching teams:', error); // Debugging log
+      console.error('Error fetching teams:', error); // Enhanced Debugging log
       res.status(500).json({ message: 'Internal server error', error });
     }
   };
+  
   
 
 module.exports = { 
