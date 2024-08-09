@@ -30,8 +30,6 @@ const deleteTeam = async (req, res) => {
   const { teamId } = req.params;
   const userId = req.user._id;
 
-  console.log("teamId:", teamId);
-  console.log("userId:", userId);
 
   try {
     const team = await Team.findById(teamId);
@@ -104,7 +102,8 @@ const deleteTeam = async (req, res) => {
   
       const teams = user.userTeams.map(userTeam => userTeam._id);
   
-      console.log('Fetched Teams:', teams); // Debugging log
+      
+      
   
       res.status(200).json({ message: 'Teams fetched successfully', teams });
     } catch (error) {

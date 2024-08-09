@@ -363,7 +363,7 @@ const makeSubscriptionPayment = async (req, res) => {
     user.stripeCustomerId = customerId;
     await user.save();
   } else {
-    console.log('Existing Stripe customer ID:', customerId);
+
   }
 
   try {
@@ -389,35 +389,39 @@ const makeSubscriptionPayment = async (req, res) => {
   }
 };
 
-const cancelSubscription  = async (req, res) => {
+export const cancelUserSubscription = async (token) => {
   try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    console.log('Starting cancelUserSubscription...');
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    const response = await fetch(`${USER_URL}/cancel-subscription`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-    if (!user.stripeSubscriptionId) {
-      return res.status(400).json({ message: 'No subscription found' });
-    }
+    console.log('Response received:', response);
 
-    // Cancel the Stripe subscription
-    const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    console.log('Content-Type:', contentType);
 
-    if (subscription.status === 'canceled') {
-      user.subscriptionStatus = false;
-      user.stripeSubscriptionId = null;
-      await user.save();
-
-      res.status(200).json({ message: 'Subscription cancelled successfully', subscriptionStatus: user.subscriptionStatus });
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('JSON data:', data);
+      return data; // Return the JSON data
     } else {
-      res.status(500).json({ message: 'Failed to cancel subscription' });
+      const text = await response.text();
+      console.log('Text data:', text);
+      throw new Error(text || 'Failed to cancel subscription');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error canceling subscription:', error);
+    throw error;
   }
 };
+
 
 module.exports = { 
   signupUser, 
