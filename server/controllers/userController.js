@@ -389,7 +389,7 @@ const makeSubscriptionPayment = async (req, res) => {
   }
 };
 
-export const cancelUserSubscription = async (token) => {
+export const cancelSubscription = async (token) => {
   try {
     console.log('Starting cancelUserSubscription...');
 
