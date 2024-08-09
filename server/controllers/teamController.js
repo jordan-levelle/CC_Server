@@ -44,18 +44,21 @@ const deleteTeam = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized action' });
     }
 
-    await team.remove();
+    // Use deleteOne method to remove the team
+    await team.deleteOne();
 
+    // Remove the team reference from the user document
     await User.findByIdAndUpdate(userId, {
-      $pull: { userTeams: team._id }  // Updated for clarity
+      $pull: { userTeams: team._id }
     });
 
     res.status(200).json({ message: 'Team deleted successfully' });
   } catch (error) {
-    console.error("Error deleting team:", error);  // Log the error details
+    console.error("Error deleting team:", error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
 
 
 
