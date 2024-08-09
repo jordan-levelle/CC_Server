@@ -389,39 +389,35 @@ const makeSubscriptionPayment = async (req, res) => {
   }
 };
 
-export const cancelSubscription = async (token) => {
+const cancelSubscription  = async (req, res) => {
   try {
-    console.log('Starting cancelUserSubscription...');
+    const userId = req.user._id;
+    const user = await User.findById(userId);
 
-    const response = await fetch(`${USER_URL}/cancel-subscription`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    console.log('Response received:', response);
+    if (!user.stripeSubscriptionId) {
+      return res.status(400).json({ message: 'No subscription found' });
+    }
 
-    // Check if the response is JSON
-    const contentType = response.headers.get('content-type');
-    console.log('Content-Type:', contentType);
+    // Cancel the Stripe subscription
+    const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
 
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log('JSON data:', data);
-      return data; // Return the JSON data
+    if (subscription.status === 'canceled') {
+      user.subscriptionStatus = false;
+      user.stripeSubscriptionId = null;
+      await user.save();
+
+      res.status(200).json({ message: 'Subscription cancelled successfully', subscriptionStatus: user.subscriptionStatus });
     } else {
-      const text = await response.text();
-      console.log('Text data:', text);
-      throw new Error(text || 'Failed to cancel subscription');
+      res.status(500).json({ message: 'Failed to cancel subscription' });
     }
   } catch (error) {
-    console.error('Error canceling subscription:', error);
-    throw error;
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 
 module.exports = { 
   signupUser, 
