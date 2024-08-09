@@ -402,7 +402,6 @@ const cancelSubscription  = async (req, res) => {
       return res.status(400).json({ message: 'No subscription found' });
     }
 
-    // Cancel the Stripe subscription
     const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
 
     if (subscription.status === 'canceled') {
@@ -410,14 +409,15 @@ const cancelSubscription  = async (req, res) => {
       user.stripeSubscriptionId = null;
       await user.save();
 
-      res.status(200).json({ message: 'Subscription cancelled successfully', subscriptionStatus: user.subscriptionStatus });
+      return res.status(200).json({ message: 'Subscription cancelled successfully', subscriptionStatus: user.subscriptionStatus });
     } else {
-      res.status(500).json({ message: 'Failed to cancel subscription' });
+      return res.status(500).json({ message: 'Failed to cancel subscription' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 module.exports = { 
   signupUser, 

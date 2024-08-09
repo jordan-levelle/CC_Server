@@ -61,4 +61,5 @@ router.post('/makePayment', requireAuth, makeSubscriptionPayment);
 // User Cancel Subscription route
 router.post('/cancel-subscription', requireAuth, cancelSubscription)
 
+
 module.exports = router;
