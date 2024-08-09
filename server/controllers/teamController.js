@@ -49,7 +49,7 @@ const deleteTeam = async (req, res) => {
 
     // Remove the team reference from the user document
     await User.findByIdAndUpdate(userId, {
-      $pull: { userTeams: team._id }
+      $pull: { userTeams: { _id: teamId } }
     });
 
     res.status(200).json({ message: 'Team deleted successfully' });
