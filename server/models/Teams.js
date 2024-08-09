@@ -18,4 +18,4 @@ const teamSchema = new Schema({
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true } // Reference to the user who created the team
 });
 
-module.exports = mongoose.model('Teams', teamSchema);
+module.exports = mongoose.model('Team', teamSchema);
