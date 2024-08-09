@@ -30,32 +30,33 @@ const deleteTeam = async (req, res) => {
   const { teamId } = req.params;
   const userId = req.user._id;
 
+  console.log("teamId:", teamId);
+  console.log("userId:", userId);
+
   try {
-    // Find the team by its _id
     const team = await Team.findById(teamId);
 
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
     }
 
-    // Check if the team was created by the user
     if (team.createdBy.toString() !== userId.toString()) {
       return res.status(403).json({ message: 'Unauthorized action' });
     }
 
-    // Remove the team
     await team.remove();
 
-    // Remove the team reference from the user document
     await User.findByIdAndUpdate(userId, {
-      $pull: { userTeams: { _id: team._id } }  // This will now work as expected
+      $pull: { userTeams: team._id }  // Updated for clarity
     });
 
     res.status(200).json({ message: 'Team deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error });
+    console.error("Error deleting team:", error);  // Log the error details
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
 
 
   const editTeam = async (req, res) => {
