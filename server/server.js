@@ -32,7 +32,7 @@ app.use('/api/webhooks', webhookRoutes);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
 
-    propTTLScheduler();
+    // propTTLScheduler();
     app.listen(process.env.PORT || 3000, () => {
       console.log('connected to db & listening on port', process.env.PORT)
     })
