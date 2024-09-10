@@ -1,4 +1,4 @@
-const Proposal = require('../models/Proposal').default;
+const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
