@@ -1,26 +1,8 @@
-const express = require('express');
-const requireAuth = require('../middleware/requireAuth');
-const {
-  loginUser,
-  signupUser,
-  verifyUser,
-  deleteUser,
-  resetUserPassword,
-  updateUserEmail,
-  makeSubscriptionPayment,
-  cancelSubscription,
-  getParticipatedProposals,
-  setParticipatedProposal,
-  removeParticipatedProposal,
-  archiveProposal,
-  getArchivedProposals,
-  removeArchivedProposal,
-  checkVerificationStatus,
-  forgotUserPassword,
-  resetForgotUserPassword
-} = require('../controllers/userController');
+import { Router } from 'express';
+import requireAuth from '../middleware/requireAuth';
+import { loginUser, signupUser, verifyUser, deleteUser, resetUserPassword, updateUserEmail, makeSubscriptionPayment, cancelSubscription, getParticipatedProposals, setParticipatedProposal, removeParticipatedProposal, archiveProposal, getArchivedProposals, removeArchivedProposal, checkVerificationStatus, forgotUserPassword, resetForgotUserPassword } from '../controllers/userController';
 
-const router = express.Router();
+const router = Router();
 
 // User management routes
 router.post('/login', loginUser);
@@ -48,4 +30,4 @@ router.get('/archivedProposals', requireAuth, getArchivedProposals);
 router.delete('/removeArchive/:proposalId', requireAuth, removeArchivedProposal);
 
 
-module.exports = router;
+export default router;

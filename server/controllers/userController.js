@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const User = require('../models/User').default;
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto'); 

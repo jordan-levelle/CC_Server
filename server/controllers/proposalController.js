@@ -1,5 +1,5 @@
-const Proposal = require('../models/Proposal');
-const User = require('../models/User');
+const Proposal = require('../models/Proposal').default;
+const User = require('../models/User').default;
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail } = require('../utils/EmailUtils');

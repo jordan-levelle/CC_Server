@@ -1,21 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const requireAuth = require('../middleware/requireAuth');
-const {
-  createProposal,
-  getActiveProposals,
-  getExpiredProposals,
-  getAllProposals,
-  getProposal,
-  checkFirstRender,
-  deleteProposal,
-  updateProposal,
-  submitVote,
-  updateVote,
-  getSubmittedVotes,
-  deleteVote,
-  deleteProposalsByUser,
-} = require('../controllers/proposalController');
+import { Router } from 'express';
+const router = Router();
+import requireAuth from '../middleware/requireAuth';
+import { createProposal, getActiveProposals, getExpiredProposals, getAllProposals, getProposal, checkFirstRender, deleteProposal, updateProposal, submitVote, updateVote, getSubmittedVotes, deleteVote, deleteProposalsByUser } from '../controllers/proposalController';
 
 // Routes related to proposals
 router.get('/active', requireAuth, getActiveProposals);
@@ -32,4 +18,4 @@ router.get('/:id/votes', getSubmittedVotes);
 router.post('/:id/vote', submitVote);
 router.delete('/votes/:id', deleteVote);
 
-module.exports = router;
+export default router;

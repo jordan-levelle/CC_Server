@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import { Schema as _Schema, model } from 'mongoose';
+const Schema = _Schema;
 
 const voteSchema = new Schema({
   name: String,
@@ -24,5 +24,5 @@ const proposalSchema = new Schema({
   },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Proposal', proposalSchema);
+export default model('Proposal', proposalSchema);
 
