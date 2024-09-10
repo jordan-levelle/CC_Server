@@ -1,5 +1,5 @@
-const Team = require('../models/Teams');
-const User = require('../models/User');
+import Team, { findById } from '../models/Teams';
+import { findById as _findById, findByIdAndUpdate } from '../models/User';
 
 const createTeam = async (req, res) => {
   const { teamName, members } = req.body;
@@ -15,7 +15,7 @@ const createTeam = async (req, res) => {
     await team.save();
 
     // Add the team reference to the user document
-    const user = await User.findById(userId);
+    const user = await _findById(userId);
     user.userTeams.push({ _id: team._id });
     await user.save();
 
@@ -32,7 +32,7 @@ const deleteTeam = async (req, res) => {
 
 
   try {
-    const team = await Team.findById(teamId);
+    const team = await findById(teamId);
 
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
@@ -46,7 +46,7 @@ const deleteTeam = async (req, res) => {
     await team.deleteOne();
 
     // Remove the team reference from the user document
-    await User.findByIdAndUpdate(userId, {
+    await findByIdAndUpdate(userId, {
       $pull: { userTeams: { _id: teamId } }
     });
 
@@ -63,7 +63,7 @@ const editTeam = async (req, res) => {
   const userId = req.user._id;
   
   try {
-    const team = await Team.findById(teamId);
+    const team = await findById(teamId);
   
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
@@ -88,7 +88,7 @@ const teamList = async (req, res) => {
   const userId = req.user._id;
   
   try {    
-    const user = await User.findById(userId).populate({
+    const user = await _findById(userId).populate({
       path: 'userTeams._id',
       select: 'teamName members',
     });
@@ -108,7 +108,7 @@ const teamList = async (req, res) => {
   
   
 
-module.exports = { 
+export default { 
     createTeam, 
     editTeam,
     deleteTeam,
