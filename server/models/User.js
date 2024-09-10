@@ -13,10 +13,10 @@ const userSchema = new Schema({
     proposalId: { type: Schema.Types.ObjectId, ref: 'Proposal' },
     voteId: { type: Schema.Types.ObjectId } // Reference to the vote within the Proposal
   }],
+  archivedProposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal' }], // New field for archived proposals
   userTeams: [{
     _id: { type: Schema.Types.ObjectId, ref: 'Team' },  // Store the reference to the team using `_id`
   }],
-  
   verificationToken: String,
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },
@@ -36,4 +36,3 @@ userSchema.pre('save', async function(next) {
 });
 
 module.exports = mongoose.model('User', userSchema);
-

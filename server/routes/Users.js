@@ -12,6 +12,9 @@ const {
   getParticipatedProposals,
   setParticipatedProposal,
   removeParticipatedProposal,
+  archiveProposal,
+  getArchivedProposals,
+  removeArchivedProposal,
   checkVerificationStatus,
   forgotUserPassword,
   resetForgotUserPassword
@@ -19,47 +22,30 @@ const {
 
 const router = express.Router();
 
-// Login route
+// User management routes
 router.post('/login', loginUser);
-
-// Signup route
 router.post('/signup', signupUser);
-
-// Verification route
 router.post('/verify/:token', verifyUser);
-
-// Check verification status route
 router.get('/verify/status/:token', checkVerificationStatus);
-
-// Delete route
 router.delete('/deleteUser', requireAuth, deleteUser);
-
-// Update email route
 router.put('/updateEmail', requireAuth, updateUserEmail);
-
-// Reset Old Password
 router.put('/resetPassword', requireAuth, resetUserPassword);
-
-// Send Forgot Password Link
 router.post('/forgotPassword', forgotUserPassword);
-
-// Reset Forgot Password
 router.post('/resetForgotPassword', resetForgotUserPassword);
 
-// POST participated proposals route
+// Subscription routes
+router.post('/makePayment', requireAuth, makeSubscriptionPayment);
+router.post('/cancel-subscription', requireAuth, cancelSubscription);
+
+// Participated proposals routes
 router.post('/setParticipatedProposal', requireAuth, setParticipatedProposal);
-
-// Get participated proposals route
 router.get('/getParticipatedProposals', requireAuth, getParticipatedProposals);
-
-// Remove partipated proposal route
 router.delete('/removeParticipatedProposal/:id', requireAuth, removeParticipatedProposal);
 
-// User Upgrade Checkout Session route
-router.post('/makePayment', requireAuth, makeSubscriptionPayment);
-
-// User Cancel Subscription route
-router.post('/cancel-subscription', requireAuth, cancelSubscription)
+// Filter Routes
+router.post('/archive/:proposalId', requireAuth, archiveProposal);
+router.get('/archivedProposals', requireAuth, getArchivedProposals);
+router.delete('/archive/:proposalId', requireAuth, removeArchivedProposal);
 
 
 module.exports = router;

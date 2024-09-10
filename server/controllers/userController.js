@@ -343,6 +343,67 @@ const removeParticipatedProposal = async (req, res) => {
   }
 };
 
+const archiveProposal = async (req, res) => {
+  const { proposalId } = req.params;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if the proposal is already archived
+    if (user.archivedProposals.includes(proposalId)) {
+      return res.status(400).json({ error: 'Proposal already archived' });
+    }
+
+    // Add the proposal to the user's archived list
+    user.archivedProposals.push(proposalId);
+    await user.save();
+
+    res.status(200).json({ message: 'Proposal archived successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getArchivedProposals = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId).populate({
+      path: 'archivedProposals',
+      model: 'Proposal',
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const archivedProposals = user.archivedProposals;
+    res.status(200).json(archivedProposals);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const removeArchivedProposal = async (req, res) => {
+  const { proposalId } = req.params;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Remove the proposal from the user's archived list
+    user.archivedProposals = user.archivedProposals.filter(id => id.toString() !== proposalId);
+    await user.save();
+
+    res.status(200).json({ message: 'Archived proposal removed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 const makeSubscriptionPayment = async (req, res) => {
   const { priceId } = req.body;
 
@@ -432,6 +493,9 @@ module.exports = {
   resetForgotUserPassword, 
   getParticipatedProposals,
   setParticipatedProposal,
+  getArchivedProposals,
+  archiveProposal,
+  removeArchivedProposal,
   removeParticipatedProposal,
   checkVerificationStatus,
 };

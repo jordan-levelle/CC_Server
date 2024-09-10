@@ -12,13 +12,13 @@ const getAllProposals = async (req, res) => {
 
 const getActiveProposals = async (req,res) => {
   const user_id = req.user._id;
-  const activeProposals = await Proposal.find({ user_id, expired: false}).sort({ created: -1});
+  const activeProposals = await Proposal.find({ user_id, isExpired: false}).sort({ created: -1});
   res.status(200).json(activeProposals);
 };
 
 const getExpiredProposals = async (req,res) => {
   const user_id = req.user._id;
-  const expiredProposals = await Proposal.find({ user_id, expired: true}).sort({ created: -1});
+  const expiredProposals = await Proposal.find({ user_id, isExpired: true}).sort({ created: -1});
   res.status(200).json(expiredProposals);
 };
 
@@ -58,24 +58,17 @@ const checkFirstRender = async (req, res) => {
   }
 };
 
-const getExampleProposal = async (req, res) => {
-  try {
-    const exampleProposal = await Proposal.findOne({ isExample: true });
-
-    if (!exampleProposal) {
-      return res.status(404).json({ error: 'Example proposal not found' });
-    }
-
-    res.json(exampleProposal);
-  } catch (error) {
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
 const createProposal = async (req, res) => {
   const { title, description, name, email, uniqueUrl } = req.body;
 
+  if ( !title || !description) {
+    return res.status(400).json({ error: 'Title and description are required'});
+  }
+
   try {
+    // Generate Unique URL
+    const uniqueUrl = nanoid(10);
+
     // Use DUMMY_USER if req.user is not available
     const userId = req.user ? req.user._id : process.env.DUMMY_USER;
 
@@ -206,6 +199,11 @@ const updateProposal = async (req, res) => {
 const submitVote = async (req, res) => {
   const { id } = req.params;
   const { name, opinion, comment } = req.body;
+
+  // Check Valid Proposal Id
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid proposal ID'});
+  }
 
   try {
     const proposal = await Proposal.findById(id);

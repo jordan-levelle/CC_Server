@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
- 
+
 const voteSchema = new Schema({
   name: String,
   opinion: String,
@@ -10,18 +10,19 @@ const voteSchema = new Schema({
 const proposalSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
-  name: { type: String, required: false },
-  email: { type: String, required: false },
-  isExample: { type: Boolean, default: false },
+  name: { type: String },
+  email: { type: String, match: /.+\@.+\..+/ }, 
   user_id: { type: String, required: true },
   uniqueUrl: { type: String, required: true, unique: true },
   firstRender: { type: Boolean, default: true },
+  isExpired: { type: Boolean, default: false},
+  isArchived: { type: Boolean, default: false},
   votes: [voteSchema],
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 2592000 // 30 days
-  }
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', proposalSchema);
+

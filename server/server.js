@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const propTTLScheduler = require('./utils/Scheduler.js');
+const propCheckExpiredScheduler = require('./utils/Scheduler.js');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js')
@@ -32,7 +32,7 @@ app.use('/api/webhooks', webhookRoutes);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
 
-    // propTTLScheduler();
+    propCheckExpiredScheduler();
     app.listen(process.env.PORT || 3000, () => {
       console.log('connected to db & listening on port', process.env.PORT)
     })
