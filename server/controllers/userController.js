@@ -1,9 +1,9 @@
-const User = require('../models/User').default;
+const User = require('../models/User');
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto'); 
 const jwt = require('jsonwebtoken');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const crypto = require('crypto'); 
 const { sendEmail } = require('../utils/EmailUtils');
 
 const createToken = (_id) => {
