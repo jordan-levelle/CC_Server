@@ -5,8 +5,9 @@ const mongoose = require('mongoose');
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
-const teamRoutes = require('./routes/Teams.js')
+const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
+
 
 // express app
 const app = express();

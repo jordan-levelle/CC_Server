@@ -1,5 +1,5 @@
-import { Schema as _Schema, model } from 'mongoose';
-const Schema = _Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const memberSchema = new Schema({
   memberName: {
@@ -18,5 +18,5 @@ const teamSchema = new Schema({
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true } // Reference to the user who created the team
 });
 
-export default model('Team', teamSchema);
+module.exports = mongoose.model('Team', teamSchema);
 
