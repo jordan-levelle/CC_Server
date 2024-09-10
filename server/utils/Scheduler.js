@@ -1,15 +1,15 @@
-const cron = require('node-cron');
-const Proposal = require('../models/Proposal'); 
+import { schedule } from 'node-cron';
+import { updateMany } from '../models/Proposal'; 
 
 const TTL = 30 * 24 * 60 * 60 * 1000;
 
 const propCheckExpiredScheduler = () => {
-    cron.schedule('0 0 * * *', async () => { 
+    schedule('0 0 * * *', async () => { 
         const now = new Date();
         const expirationTime = new Date(now - TTL);
     
         try {
-            const result = await Proposal.updateMany(
+            const result = await updateMany(
                 { createdAt: { $lt: expirationTime }, isExpired: false },
                 { $set: {expired: true}}
             );
@@ -20,7 +20,7 @@ const propCheckExpiredScheduler = () => {
     });
 }
 
-module.exports = propCheckExpiredScheduler;
+export default propCheckExpiredScheduler;
 
 
 
