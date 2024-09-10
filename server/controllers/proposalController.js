@@ -2,6 +2,7 @@ const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
+const { nanoid } = require('nanoid');
 const { sendEmail } = require('../utils/EmailUtils');
 
 const getAllProposals = async (req, res) => {
