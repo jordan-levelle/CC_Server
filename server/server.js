@@ -8,12 +8,17 @@ const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
 
-
-// express app
+// Express app
 const app = express();
 
-// Enable CORS
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://dev.consensuscheck.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+// Enable CORS with options
+app.use(cors(corsOptions));
 
 // Use JSON middleware globally, but not for webhooks
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
@@ -23,25 +28,23 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Consensus Check API!');
 });
 
-// routes
+// Routes
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
-// connect to db
+// Connect to DB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-
     propCheckExpiredScheduler();
     app.listen(process.env.PORT || 3000, () => {
-      console.log('connected to db & listening on port', process.env.PORT)
-    })
+      console.log('Connected to DB & listening on port', process.env.PORT || 3000);
+    });
   })
   .catch((error) => {
-    console.log(error)
+    console.error('Database connection error:', error);
   });
-
 
 
   
