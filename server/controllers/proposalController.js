@@ -2,7 +2,6 @@ const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
-import { nanoid } from 'nanoid'
 const { sendEmail } = require('../utils/EmailUtils');
 
 const getAllProposals = async (req, res) => {
@@ -67,6 +66,9 @@ const createProposal = async (req, res) => {
   }
 
   try {
+
+    const { nanoid } = await import('nanoid');
+
     // Generate Unique URL
     const uniqueUrl = nanoid(10);
 
