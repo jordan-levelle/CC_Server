@@ -1,5 +1,5 @@
 const Proposal = require('../models/Proposal').default;
-const User = require('../models/User').default;
+const User = require('../models/User');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail } = require('../utils/EmailUtils');
@@ -322,6 +322,5 @@ module.exports = {
   updateVote,
   getSubmittedVotes,
   deleteVote,
-  getExampleProposal,
   deleteProposalsByUser,
 };
