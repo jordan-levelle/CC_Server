@@ -59,7 +59,7 @@ const checkFirstRender = async (req, res) => {
 };
 
 const createProposal = async (req, res) => {
-  const { title, description, name, email, uniqueUrl } = req.body;
+  const { title, description, name, email } = req.body;
 
   if ( !title || !description) {
     return res.status(400).json({ error: 'Title and description are required'});
