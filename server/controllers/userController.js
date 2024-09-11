@@ -353,29 +353,37 @@ const archiveProposal = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if the proposal is already archived
-    if (user.archivedProposals.includes(proposalId)) {
-      return res.status(400).json({ error: 'Proposal already archived' });
-    }
-
-    // Add the proposal to the user's archived list
-    user.archivedProposals.push(proposalId);
-    await user.save();
-
-    // Update the proposal's isArchived field in the Proposal schema
+    // Find the proposal by ID
     const proposal = await Proposal.findById(proposalId);
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
-    
-    proposal.isArchived = true;
-    await proposal.save();
 
-    res.status(200).json({ message: 'Proposal archived successfully' });
+    // Toggle the archived status
+    if (proposal.isArchived) {
+      // If already archived, unarchive it
+      proposal.isArchived = false;
+      // Remove from the user's archivedProposals list
+      user.archivedProposals = user.archivedProposals.filter(id => id.toString() !== proposalId);
+    } else {
+      // If not archived, archive it
+      proposal.isArchived = true;
+      // Add to the user's archivedProposals list
+      if (!user.archivedProposals.includes(proposalId)) {
+        user.archivedProposals.push(proposalId);
+      }
+    }
+
+    // Save both the proposal and the user
+    await proposal.save();
+    await user.save();
+
+    res.status(200).json({ message: `Proposal ${proposal.isArchived ? 'archived' : 'unarchived'} successfully` });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 const getArchivedProposals = async (req, res) => {
