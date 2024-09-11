@@ -12,7 +12,11 @@ const getAllProposals = async (req, res) => {
 
 const getActiveProposals = async (req,res) => {
   const user_id = req.user._id;
-  const activeProposals = await Proposal.find({ user_id, isExpired: false}).sort({ created: -1});
+  const activeProposals = await Proposal.find({ 
+    user_id, 
+    isExpired: false,
+    isArchived: false 
+  }).sort({ created: -1});
   res.status(200).json(activeProposals);
 };
 
