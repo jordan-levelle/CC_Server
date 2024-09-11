@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Proposal = require('../models/Proposal');
 const proposalController = require('../controllers/proposalController');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
