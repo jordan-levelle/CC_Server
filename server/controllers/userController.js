@@ -502,7 +502,6 @@ module.exports = {
   setParticipatedProposal,
   getArchivedProposals,
   archiveProposal,
-  removeArchivedProposal,
   removeParticipatedProposal,
   checkVerificationStatus,
 };
