@@ -345,6 +345,7 @@ const removeParticipatedProposal = async (req, res) => {
 
 const archiveProposal = async (req, res) => {
   const { proposalId } = req.params;
+
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -360,11 +361,21 @@ const archiveProposal = async (req, res) => {
     user.archivedProposals.push(proposalId);
     await user.save();
 
+    // Update the proposal's isArchived field in the Proposal schema
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+    
+    proposal.isArchived = true;
+    await proposal.save();
+
     res.status(200).json({ message: 'Proposal archived successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const getArchivedProposals = async (req, res) => {
   const userId = req.user._id;
