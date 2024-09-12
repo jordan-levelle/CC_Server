@@ -346,10 +346,11 @@ const removeParticipatedProposal = async (req, res) => {
 
 const archiveProposal = async (req, res) => {
   const { proposalId } = req.params;
+  const user_id = req.user._id; // The authenticated user's ID
 
   try {
     const user = await User.findOneAndUpdate(
-      { _id: req.user._id, archivedProposals: { $ne: proposalId } },
+      { _id: user_id, archivedProposals: { $ne: proposalId } },
       { $push: { archivedProposals: proposalId } },
       { new: true, runValidators: true }
     );
