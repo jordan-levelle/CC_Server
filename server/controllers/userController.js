@@ -346,7 +346,7 @@ const removeParticipatedProposal = async (req, res) => {
 
 const archiveProposal = async (req, res) => {
   const { proposalId } = req.params;
-  const user_id = req.user._id; // The authenticated user's ID
+  const user_id = req.user._id;
 
   try {
     const user = await User.findOneAndUpdate(
