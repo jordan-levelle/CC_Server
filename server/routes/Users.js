@@ -42,7 +42,7 @@ router.get('/getParticipatedProposals', requireAuth, getParticipatedProposals);
 router.delete('/removeParticipatedProposal/:id', requireAuth, removeParticipatedProposal);
 
 // Filter Routes
-router.post('/archive/:proposalId', requireAuth, archiveProposal);
+router.post('/archiveProposal/:proposalId', requireAuth, archiveProposal);
 router.get('/archivedProposals', requireAuth, getArchivedProposals);
 
 
