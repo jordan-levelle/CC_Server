@@ -3,8 +3,6 @@ const router = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 const {
   createProposal,
-  getActiveProposals,
-  getExpiredProposals,
   getAllProposals,
   getProposal,
   checkFirstRender,
@@ -18,8 +16,7 @@ const {
 } = require('../controllers/proposalController');
 
 // Routes related to proposals
-router.get('/active', requireAuth, getActiveProposals);
-router.get('/expired', requireAuth, getExpiredProposals);
+
 router.get('/all', requireAuth, getAllProposals);
 router.post('/', requireAuth, createProposal);
 router.delete('/:id', requireAuth, deleteProposal);

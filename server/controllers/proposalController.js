@@ -10,22 +10,6 @@ const getAllProposals = async (req, res) => {
   res.status(200).json(proposals);
 };
 
-const getActiveProposals = async (req,res) => {
-  const user_id = req.user._id;
-  const activeProposals = await Proposal.find({ 
-    user_id, 
-    isExpired: false,
-    isArchived: false 
-  }).sort({ created: -1});
-  res.status(200).json(activeProposals);
-};
-
-const getExpiredProposals = async (req,res) => {
-  const user_id = req.user._id;
-  const expiredProposals = await Proposal.find({ user_id, isExpired: true}).sort({ created: -1});
-  res.status(200).json(expiredProposals);
-};
-
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
@@ -318,8 +302,6 @@ const getSubmittedVotes = async (req, res) => {
 
 module.exports = {
   createProposal,
-  getActiveProposals,
-  getExpiredProposals,
   getAllProposals,
   getProposal,
   checkFirstRender,

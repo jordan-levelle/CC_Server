@@ -43,7 +43,5 @@ router.delete('/removeParticipatedProposal/:id', requireAuth, removeParticipated
 
 // Filter Routes
 router.post('/archiveProposal/:proposalId', requireAuth, archiveProposal);
-router.get('/archivedProposals', requireAuth, getArchivedProposals);
-
 
 module.exports = router;

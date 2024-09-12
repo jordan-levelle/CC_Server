@@ -385,27 +385,6 @@ const archiveProposal = async (req, res) => {
   }
 };
 
-
-
-const getArchivedProposals = async (req, res) => {
-  const userId = req.user._id;
-  try {
-    const user = await User.findById(userId).populate({
-      path: 'archivedProposals',
-      model: 'Proposal',
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const archivedProposals = user.archivedProposals;
-    res.status(200).json(archivedProposals);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 const makeSubscriptionPayment = async (req, res) => {
   const { priceId } = req.body;
 
@@ -495,7 +474,6 @@ module.exports = {
   resetForgotUserPassword, 
   getParticipatedProposals,
   setParticipatedProposal,
-  getArchivedProposals,
   archiveProposal,
   removeParticipatedProposal,
   checkVerificationStatus,
