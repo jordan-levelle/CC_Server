@@ -345,34 +345,59 @@ const removeParticipatedProposal = async (req, res) => {
 };
 
 const archiveProposal = async (req, res) => {
-  const { id } = req.params; // The proposal ID to be removed
+  const { id } = req.params; // The proposal ID
   const user_id = req.user._id; // The authenticated user's ID
 
   try {
-    const user = await User.findOneAndUpdate(
-      { _id: user_id, archivedProposals: { $ne: id } },
-      { $push: { archivedProposals: id } },
-      { new: true, runValidators: true }
-    );
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const proposal = await Proposal.findByIdAndUpdate(
-      id,
-      { $set: { isArchived: true } },
-      { new: true }
-    );
+    // Find the proposal
+    const proposal = await Proposal.findById(id);
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    return res.status(200).json({ message: 'Proposal archived successfully', proposal });
+    // Determine if the proposal is currently archived
+    const isCurrentlyArchived = proposal.isArchived;
+
+    // Toggle the proposal's archived state
+    const updatedProposal = await Proposal.findByIdAndUpdate(
+      id,
+      { $set: { isArchived: !isCurrentlyArchived } }, // Toggle the isArchived state
+      { new: true }
+    );
+
+    if (!updatedProposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    // Update the user's archivedProposals list
+    let userUpdate;
+    if (isCurrentlyArchived) {
+      // Remove from archivedProposals
+      userUpdate = await User.findOneAndUpdate(
+        { _id: user_id, archivedProposals: id },
+        { $pull: { archivedProposals: id } },
+        { new: true, runValidators: true }
+      );
+    } else {
+      // Add to archivedProposals
+      userUpdate = await User.findOneAndUpdate(
+        { _id: user_id, archivedProposals: { $ne: id } },
+        { $push: { archivedProposals: id } },
+        { new: true, runValidators: true }
+      );
+    }
+
+    if (!userUpdate) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ message: 'Proposal toggle state updated successfully', proposal: updatedProposal });
   } catch (error) {
     console.error('Error in archiveProposal function:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 const makeSubscriptionPayment = async (req, res) => {
