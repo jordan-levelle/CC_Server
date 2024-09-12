@@ -13,7 +13,6 @@ const {
   setParticipatedProposal,
   removeParticipatedProposal,
   archiveProposal,
-  getArchivedProposals,
   checkVerificationStatus,
   forgotUserPassword,
   resetForgotUserPassword
