@@ -346,44 +346,39 @@ const removeParticipatedProposal = async (req, res) => {
 
 const archiveProposal = async (req, res) => {
   const { proposalId } = req.params;
-  
+
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
     // Check if the proposal is already archived
     const isArchived = user.archivedProposals.includes(proposalId);
-    
+
     if (isArchived) {
-      // Remove the proposal from the archived list and update the proposal's isArchived field
+      // Unarchive the proposal
       user.archivedProposals = user.archivedProposals.filter(id => id !== proposalId);
-      await user.save();
-
-      const proposal = await Proposal.findById(proposalId);
-      if (!proposal) {
-        return res.status(404).json({ error: 'Proposal not found' });
-      }
-      
       proposal.isArchived = false;
-      await proposal.save();
-      
-      return res.status(200).json({ message: 'Proposal unarchived successfully' });
-    } else {
-      // Add the proposal to the archived list and update the proposal's isArchived field
-      user.archivedProposals.push(proposalId);
       await user.save();
-
-      const proposal = await Proposal.findById(proposalId);
-      if (!proposal) {
-        return res.status(404).json({ error: 'Proposal not found' });
-      }
-      
-      proposal.isArchived = true;
       await proposal.save();
 
-      return res.status(200).json({ message: 'Proposal archived successfully' });
+      // Respond with a JSON object
+      return res.status(200).json({ message: 'Proposal unarchived successfully', proposal });
+    } else {
+      // Archive the proposal
+      user.archivedProposals.push(proposalId);
+      proposal.isArchived = true;
+      await user.save();
+      await proposal.save();
+
+      // Respond with a JSON object
+      return res.status(200).json({ message: 'Proposal archived successfully', proposal });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
