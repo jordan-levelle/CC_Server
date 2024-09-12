@@ -345,13 +345,13 @@ const removeParticipatedProposal = async (req, res) => {
 };
 
 const archiveProposal = async (req, res) => {
-  const { proposalId } = req.params;
-  const user_id = req.user._id;
+  const { id } = req.params; // The proposal ID to be removed
+  const user_id = req.user._id; // The authenticated user's ID
 
   try {
     const user = await User.findOneAndUpdate(
-      { _id: user_id, archivedProposals: { $ne: proposalId } },
-      { $push: { archivedProposals: proposalId } },
+      { _id: user_id, archivedProposals: { $ne: id } },
+      { $push: { archivedProposals: id } },
       { new: true, runValidators: true }
     );
     if (!user) {
@@ -359,7 +359,7 @@ const archiveProposal = async (req, res) => {
     }
 
     const proposal = await Proposal.findByIdAndUpdate(
-      proposalId,
+      id,
       { $set: { isArchived: true } },
       { new: true }
     );
