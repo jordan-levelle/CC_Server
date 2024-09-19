@@ -50,13 +50,13 @@ const checkFirstRender = async (req, res) => {
 const createProposal = async (req, res) => {
   const { title, description, name, email, teamId } = req.body;
 
-  if ( !title || !description) {
-    return res.status(400).json({ error: 'Title and description are required'});
+  // Validate required fields
+  if (!title || !description) {
+    return res.status(400).json({ error: 'Title and description are required' });
   }
 
   try {
-
-    const { nanoid } = await import('nanoid');
+    const { nanoid } = await import('nanoid'); // Dynamically import nanoid
 
     // Generate Unique URL
     const uniqueUrl = nanoid(10);
@@ -66,17 +66,22 @@ const createProposal = async (req, res) => {
 
     const emailValue = email || null;
     const nameValue = name || '';
+
+    // Proposal data object
     const proposalData = {
       title,
       description,
       name: nameValue,
       email: emailValue,
       user_id: userId,
-      uniqueUrl
+      uniqueUrl,
+      teamId: teamId || null, // Add teamId if present
     };
 
+    // Create the proposal
     const proposal = await Proposal.create(proposalData);
 
+    // Associate proposal with user if not using DUMMY_USER
     if (userId !== process.env.DUMMY_USER) {
       await User.findByIdAndUpdate(
         userId,
@@ -85,8 +90,9 @@ const createProposal = async (req, res) => {
       );
     }
 
+    // Send email to the creator if email is provided
     if (emailValue) {
-      const uniqueId = uuidv4(); 
+      const uniqueId = uuidv4(); // Generate a unique ID for edit link
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
         <p>You submitted a new proposal!</p>
@@ -99,22 +105,27 @@ const createProposal = async (req, res) => {
       await sendEmail(emailValue, emailSubject, emailContent);
     }
 
+    // If teamId is provided, notify the team members
     if (teamId) {
-      const team = await Team.findById(teamId);
+      const team = await Team.findById(teamId).populate('members'); // Populate members of the team
 
       if (team && team.members.length > 0) {
         const memberEmails = team.members.map(member => member.email);
 
-        await sendEmail(memberEmails, {
-            emailSubject: `<p>New Proposal: ${title}</p> `,
-            emailContent: `
-              <p>A new proposal has been submitted to your team: ${description}</p>
-             <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>`
-        })
+        const teamEmailSubject = `New Proposal: ${title}`;
+        const teamEmailContent = `
+          <p>A new proposal has been submitted to your team: ${description}</p>
+          <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
+        `;
+
+        // Send email to all team members
+        await sendEmail(memberEmails, teamEmailSubject, teamEmailContent);
       }
     }
 
+    // Return the newly created proposal as response
     res.status(200).json(proposal);
+
   } catch (error) {
     console.error('Error creating proposal:', error);
     res.status(400).json({ error: error.message });

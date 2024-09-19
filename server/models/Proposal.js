@@ -13,6 +13,7 @@ const proposalSchema = new Schema({
   name: { type: String },
   email: { type: String, match: /.+\@.+\..+/ }, 
   user_id: { type: String, required: true },
+  teamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Team'},
   uniqueUrl: { type: String, required: true, unique: true },
   firstRender: { type: Boolean, default: true },
   isExpired: { type: Boolean, default: false},

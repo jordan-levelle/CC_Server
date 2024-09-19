@@ -16,9 +16,11 @@ const sendEmail = async (to, subject, htmlContent) => {
   try {
     const plainTextContent = htmlToText(htmlContent, { wordwrap: 130 });
 
+    const recipients = Array.Array.isArray(to) ? to.join(','): to;
+
     const info = await transporter.sendMail({
       from: '"Consensus Check" <notifications@consensuscheck.com>', 
-      to: to,
+      to: recipients,
       subject: subject,
       text: plainTextContent, // Convert HTML to plain text
       html: htmlContent,
