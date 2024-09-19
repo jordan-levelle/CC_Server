@@ -48,7 +48,7 @@ const checkFirstRender = async (req, res) => {
 };
 
 const createProposal = async (req, res) => {
-  const { title, description, name, email, teamId, teamName } = req.body;
+  const { title, description, name, email, teamId } = req.body;
 
   // Validate required fields
   if (!title || !description) {
@@ -79,6 +79,7 @@ const createProposal = async (req, res) => {
       user_id: userId,
       uniqueUrl,
       teamId: teamId || null, // Add teamId if present
+      teamName: teamName
     };
 
     // Create the proposal
