@@ -67,6 +67,9 @@ const createProposal = async (req, res) => {
     const emailValue = email || null;
     const nameValue = name || '';
 
+    // Log the proposal details being created
+    console.log("Creating proposal with data:", { title, description, name: nameValue, email: emailValue, userId });
+
     // Proposal data object
     const proposalData = {
       title,
@@ -81,6 +84,9 @@ const createProposal = async (req, res) => {
     // Create the proposal
     const proposal = await Proposal.create(proposalData);
 
+    // Log proposal creation success
+    console.log("Proposal created successfully with ID:", proposal._id);
+
     // Associate proposal with user if not using DUMMY_USER
     if (userId !== process.env.DUMMY_USER) {
       await User.findByIdAndUpdate(
@@ -88,6 +94,7 @@ const createProposal = async (req, res) => {
         { $push: { proposals: proposal._id } },
         { new: true }
       );
+      console.log("Proposal associated with user ID:", userId);
     }
 
     // Send email to the creator if email is provided
@@ -102,7 +109,10 @@ const createProposal = async (req, res) => {
         <p><a href="${process.env.ORIGIN}edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
 
+      // Log email being sent to the proposal creator
+      console.log(`Sending email to proposal creator: ${emailValue}`);
       await sendEmail(emailValue, emailSubject, emailContent);
+      console.log("Email sent to creator successfully.");
     }
 
     // If teamId is provided, notify the team members
@@ -110,7 +120,7 @@ const createProposal = async (req, res) => {
       const team = await Team.findById(teamId).populate('members'); // Populate members of the team
 
       if (team && team.members.length > 0) {
-        const memberEmails = team.members.map(member => member.email);
+        const memberEmails = team.members.map(member => member.memberEmail);
 
         const teamEmailSubject = `New Proposal: ${title}`;
         const teamEmailContent = `
@@ -118,8 +128,15 @@ const createProposal = async (req, res) => {
           <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         `;
 
+        // Log team notification details
+        console.log(`Sending notifications to team: ${team.teamName}`);
+        console.log("Team members being notified:", memberEmails);
+
         // Send email to all team members
         await sendEmail(memberEmails, teamEmailSubject, teamEmailContent);
+        console.log("Email sent to team members successfully.");
+      } else {
+        console.log("No members found in the selected team.");
       }
     }
 
