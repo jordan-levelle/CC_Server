@@ -48,7 +48,7 @@ const checkFirstRender = async (req, res) => {
 };
 
 const createProposal = async (req, res) => {
-  const { title, description, name, email, teamId } = req.body;
+  const { title, description, name, email, teamId, teamName } = req.body;
 
   // Validate required fields
   if (!title || !description) {
@@ -131,7 +131,7 @@ const createProposal = async (req, res) => {
         `;
 
         // Log team notification details
-        console.log(`Sending notifications to team: ${team.teamName}`);
+        console.log(`Sending notifications to team: ${teamName}`);
         console.log("Team members being notified:", memberEmails);
 
         // Send email to all team members
