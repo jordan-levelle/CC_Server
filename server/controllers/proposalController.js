@@ -48,7 +48,7 @@ const checkFirstRender = async (req, res) => {
 };
 
 const createProposal = async (req, res) => {
-  const { title, description, name, email, teamId } = req.body;
+  const { title, description, name, email, teamId, teamName } = req.body;
 
   // Validate required fields
   if (!title || !description) {
@@ -126,7 +126,7 @@ const createProposal = async (req, res) => {
         const teamEmailContent = `
           <p><strong>Title:</strong> ${title}</p>
           <p><strong>Submitted by:</strong> ${nameValue}</p>
-          <p>New proposal has been submitted to your team: ${team.teamName}</p>
+          <p>New proposal has been submitted to your team: ${teamName}</p>
           <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         `;
 
