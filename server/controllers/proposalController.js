@@ -1,5 +1,6 @@
 const Proposal = require('../models/Proposal');
 const User = require('../models/User');
+const Team = require('../models/Teams');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail } = require('../utils/EmailUtils');
@@ -47,7 +48,7 @@ const checkFirstRender = async (req, res) => {
 };
 
 const createProposal = async (req, res) => {
-  const { title, description, name, email } = req.body;
+  const { title, description, name, email, teamId } = req.body;
 
   if ( !title || !description) {
     return res.status(400).json({ error: 'Title and description are required'});
@@ -96,6 +97,21 @@ const createProposal = async (req, res) => {
       `;
 
       await sendEmail(emailValue, emailSubject, emailContent);
+    }
+
+    if (teamId) {
+      const team = await Team.findById(teamId);
+
+      if (team && team.members.length > 0) {
+        const memberEmails = team.members.map(member => member.email);
+
+        await sendEmail(memberEmails, {
+            emailSubject: `<p>New Proposal: ${title}</p> `,
+            emailContent: `
+              <p>A new proposal has been submitted to your team: ${description}</p>
+             <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>`
+        })
+      }
     }
 
     res.status(200).json(proposal);
