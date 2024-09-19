@@ -14,22 +14,25 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async (to, subject, htmlContent) => {
   try {
+    // Check if `to` is an array, if so, join it into a comma-separated string
+    const recipients = Array.isArray(to) ? to.join(', ') : to;
+
     const plainTextContent = htmlToText(htmlContent, { wordwrap: 130 });
 
-    const recipients = Array.Array.isArray(to) ? to.join(','): to;
-
     const info = await transporter.sendMail({
-      from: '"Consensus Check" <notifications@consensuscheck.com>', 
-      to: recipients,
+      from: '"Consensus Check" <notifications@consensuscheck.com>',
+      to: recipients,  // Use the comma-separated list of recipients
       subject: subject,
-      text: plainTextContent, // Convert HTML to plain text
+      text: plainTextContent,
       html: htmlContent,
     });
 
+    console.log('Email sent successfully:', info);
   } catch (error) {
     console.error('Error sending email:', error);
   }
 };
+
 
 // Function to generate a verification token based on user ID
 const generateVerificationToken = (userId) => {
