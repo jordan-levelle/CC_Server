@@ -124,6 +124,8 @@ const createProposal = async (req, res) => {
 
         const teamEmailSubject = `New Proposal: ${title}`;
         const teamEmailContent = `
+          <p><strong>Title:</strong> ${title}</p>
+          <p><strong>Submitted by:</strong> ${nameValue}</p>
           <p>A new proposal has been submitted to your team: ${description}</p>
           <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         `;
