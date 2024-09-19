@@ -70,6 +70,17 @@ const createProposal = async (req, res) => {
     // Log the proposal details being created
     console.log("Creating proposal with data:", { title, description, name: nameValue, email: emailValue, userId });
 
+    // Retrieve the team name if teamId is provided
+    let teamName = null;
+    if (teamId) {
+      const team = await Team.findById(teamId).populate('members'); // Populate members of the team
+      if (team) {
+        teamName = team.teamName;
+      } else {
+        console.log(`Team with ID ${teamId} not found.`);
+      }
+    }
+
     // Proposal data object
     const proposalData = {
       title,
@@ -79,7 +90,7 @@ const createProposal = async (req, res) => {
       user_id: userId,
       uniqueUrl,
       teamId: teamId || null, // Add teamId if present
-      teamName: teamName
+      teamName: teamName || null, // Add teamName if present
     };
 
     // Create the proposal
@@ -117,7 +128,7 @@ const createProposal = async (req, res) => {
     }
 
     // If teamId is provided, notify the team members
-    if (teamId) {
+    if (teamId && teamName) {
       const team = await Team.findById(teamId).populate('members'); // Populate members of the team
 
       if (team && team.members.length > 0) {
