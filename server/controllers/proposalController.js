@@ -13,28 +13,20 @@ const getAllProposals = async (req, res) => {
 
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
-  const userId = req.user.id; // Assuming you have middleware to set req.user
 
   try {
-    const proposal = await Proposal.findOne({ uniqueUrl });
+    let proposal = await Proposal.findOne({ uniqueUrl });
 
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Check if the logged-in user is the owner
-    const isOwner = proposal.user_id === userId;
-
-    res.status(200).json({
-      proposal,
-      isOwner, // Include ownership status in the response
-    });
+    res.status(200).json(proposal);
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 const checkFirstRender = async (req, res) => {
   try {
