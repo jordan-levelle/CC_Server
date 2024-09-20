@@ -434,8 +434,8 @@ const makeSubscriptionPayment = async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.ORIGIN}?success=true`,
-      cancel_url: `${process.env.ORIGIN}?canceled=true`,
+      success_url: `${process.env.ORIGIN}/subscribe?success=true`,
+      cancel_url: `${process.env.ORIGIN}/subscribe?canceled=true`,
     });
 
     // Send back only the session URL for redirection
