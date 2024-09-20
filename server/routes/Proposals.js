@@ -23,7 +23,7 @@ router.delete('/:id', requireAuth, deleteProposal);
 router.delete('/user/:id', requireAuth, deleteProposalsByUser);
 router.put('/:id/votes/:voteId', requireAuth, updateVote);
 router.put('/:uniqueUrl', updateProposal);
-router.get('/:uniqueUrl', getProposal);
+router.get('/:uniqueUrl', requireAuth, getProposal);
 router.get('/:id/firstRender', checkFirstRender);
 router.get('/:id/votes', getSubmittedVotes);
 router.post('/:id/vote', submitVote);
