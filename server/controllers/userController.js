@@ -398,8 +398,6 @@ const archiveProposal = async (req, res) => {
   }
 };
 
-
-
 const makeSubscriptionPayment = async (req, res) => {
   const { priceId } = req.body;
 
@@ -414,13 +412,11 @@ const makeSubscriptionPayment = async (req, res) => {
   let customerId = user.stripeCustomerId;
   if (!customerId) {
     const customer = await stripe.customers.create({
-      email: user.email,
+      email: user.email, // Ensure you include the user's email
     });
     customerId = customer.id;
     user.stripeCustomerId = customerId;
     await user.save();
-  } else {
-
   }
 
   try {
@@ -429,12 +425,12 @@ const makeSubscriptionPayment = async (req, res) => {
       customer: customerId,
       line_items: [
         {
-          price: 'price_1PdwW3DfXxf0bxwGjLCd8htC',
+          price: priceId, // Use the provided priceId
           quantity: 1,
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.ORIGIN}?success=true`,
+      success_url: `${process.env.ORIGIN}/profile?success=true`, // Redirect to profile on success
       cancel_url: `${process.env.ORIGIN}?canceled=true`,
     });
 
@@ -445,6 +441,7 @@ const makeSubscriptionPayment = async (req, res) => {
     res.status(500).json({ error: 'Failed to create Stripe session' });
   }
 };
+
 
 const cancelSubscription  = async (req, res) => {
   try {
