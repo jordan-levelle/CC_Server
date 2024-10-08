@@ -5,11 +5,16 @@ const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail } = require('../utils/EmailUtils');
 
+
+
 const getAllProposals = async (req, res) => {
   const user_id = req.user._id;
   const proposals = await Proposal.find({ user_id }).sort({ createdAt: -1 });
   res.status(200).json(proposals);
 };
+
+
+
 
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
@@ -21,31 +26,21 @@ const getProposal = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    res.status(200).json(proposal);
+    const isOwner = req.user && req.user._id === proposal.user_id;
+
+    // Send the proposal data along with ownership info
+    res.status(200).json({
+      proposal,
+      isOwner, // Add this flag to indicate ownership
+    });
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-const checkFirstRender = async (req, res) => {
-  try {
-    const proposal = await Proposal.findById(req.params.id);
-    if (!proposal) {
-      return res.status(404).json({ message: 'Proposal not found' });
-    }
 
-    const firstRender = proposal.firstRender;
-    if (firstRender) {
-      proposal.firstRender = false;
-      await proposal.save();
-    }
 
-    return res.json({ firstRender });
-  } catch (error) {
-    return res.status(500).json({ message: 'Server error' });
-  }
-};
 
 const createProposal = async (req, res) => {
   const { title, description, name, email, teamId } = req.body;
@@ -67,8 +62,8 @@ const createProposal = async (req, res) => {
     const emailValue = email || null;
     const nameValue = name || '';
 
-    // Log the proposal details being created
-    console.log("Creating proposal with data:", { title, description, name: nameValue, email: emailValue, userId });
+    // // Log the proposal details being created
+    // console.log("Creating proposal with data:", { title, description, name: nameValue, email: emailValue, userId });
 
     // Retrieve the team name if teamId is provided
     let teamName = null;
@@ -97,7 +92,7 @@ const createProposal = async (req, res) => {
     const proposal = await Proposal.create(proposalData);
 
     // Log proposal creation success
-    console.log("Proposal created successfully with ID:", proposal._id);
+    // console.log("Proposal created successfully with ID:", proposal._id);
 
     // Associate proposal with user if not using DUMMY_USER
     if (userId !== process.env.DUMMY_USER) {
@@ -106,7 +101,7 @@ const createProposal = async (req, res) => {
         { $push: { proposals: proposal._id } },
         { new: true }
       );
-      console.log("Proposal associated with user ID:", userId);
+      // console.log("Proposal associated with user ID:", userId);
     }
 
     // Send email to the creator if email is provided
@@ -122,9 +117,9 @@ const createProposal = async (req, res) => {
       `;
 
       // Log email being sent to the proposal creator
-      console.log(`Sending email to proposal creator: ${emailValue}`);
+      // console.log(`Sending email to proposal creator: ${emailValue}`);
       await sendEmail(emailValue, emailSubject, emailContent);
-      console.log("Email sent to creator successfully.");
+      // console.log("Email sent to creator successfully.");
     }
 
     // If teamId is provided, notify the team members
@@ -138,17 +133,18 @@ const createProposal = async (req, res) => {
         const teamEmailContent = `
           <p><strong>Title:</strong> ${title}</p>
           <p><strong>Submitted by:</strong> ${nameValue}</p>
+          <p><strong>Description:</strong> ${description}</p>
           <p>New proposal has been submitted to your team: ${teamName}</p>
           <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         `;
 
         // Log team notification details
-        console.log(`Sending notifications to team: ${teamName}`);
-        console.log("Team members being notified:", memberEmails);
+        // console.log(`Sending notifications to team: ${teamName}`);
+        // console.log("Team members being notified:", memberEmails);
 
         // Send email to all team members
         await sendEmail(memberEmails, teamEmailSubject, teamEmailContent);
-        console.log("Email sent to team members successfully.");
+        // console.log("Email sent to team members successfully.");
       } else {
         console.log("No members found in the selected team.");
       }
@@ -162,6 +158,8 @@ const createProposal = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+
 
 
 const deleteProposal = async (req, res) => {
@@ -193,6 +191,8 @@ const deleteProposal = async (req, res) => {
 };
 
 
+
+
 const deleteProposalsByUser = async (userId) => {
   try {
     const proposals = await Proposal.find({ user_id: userId });
@@ -219,6 +219,9 @@ const deleteProposalsByUser = async (userId) => {
   }
 };
 
+
+
+
 const updateProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
   const { title, description, name, email, receiveNotifications } = req.body;
@@ -244,6 +247,29 @@ const updateProposal = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+
+
+const getSubmittedVotes = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const proposal = await Proposal.findById(id);
+
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    res.status(200).json({ votes: proposal.votes });
+  } catch (error) {
+    console.error('Error fetching submitted votes:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
 
 const submitVote = async (req, res) => {
   const { id } = req.params;
@@ -286,6 +312,9 @@ const submitVote = async (req, res) => {
   }
 };
 
+
+
+
 const updateVote = async (req, res) => {
   const { id } = req.params;
   const { _id, opinion, comment, name } = req.body;
@@ -307,6 +336,19 @@ const updateVote = async (req, res) => {
     if (name !== undefined) voteToUpdate.name = name;
     voteToUpdate.updatedAt = new Date();
 
+    if (proposal.email) {
+      const emailSubject = 'Vote Updated';
+      const emailContent = `
+        <p>A vote has been updated for your proposal titled "<strong>${proposal.title}</strong>".</p>
+        <p><strong> by:</strong> ${name}</p>
+        <p><strong>Updated Vote:</strong> ${opinion}</p>
+        <p><strong>Comment:</strong> ${comment}</p>
+        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
+      `;
+
+      await sendEmail(proposal.email, emailSubject, emailContent);
+    }
+
     await proposal.save();
 
     res.status(200).json({ message: 'Vote updated successfully' });
@@ -315,6 +357,9 @@ const updateVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+
 
 const deleteVote = async (req, res) => {
   const { id } = req.params;
@@ -341,20 +386,25 @@ const deleteVote = async (req, res) => {
   }
 };
 
-const getSubmittedVotes = async (req, res) => {
-  const { id } = req.params;
 
+
+
+const checkFirstRender = async (req, res) => {
   try {
-    const proposal = await Proposal.findById(id);
-
+    const proposal = await Proposal.findById(req.params.id);
     if (!proposal) {
-      return res.status(404).json({ error: 'Proposal not found' });
+      return res.status(404).json({ message: 'Proposal not found' });
     }
 
-    res.status(200).json({ votes: proposal.votes });
+    const firstRender = proposal.firstRender;
+    if (firstRender) {
+      proposal.firstRender = false;
+      await proposal.save();
+    }
+
+    return res.json({ firstRender });
   } catch (error) {
-    console.error('Error fetching submitted votes:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 

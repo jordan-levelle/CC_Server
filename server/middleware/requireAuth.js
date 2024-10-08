@@ -3,12 +3,12 @@ const User = require('../models/User');
 
 const requireAuth = async (req, res, next) => {
   const { authorization } = req.headers;
+
   try {
     let user = null;
 
     if (authorization) {
       const token = authorization.split(' ')[1];
-
       if (token && token !== process.env.DUMMY_TOKEN) {
         const decodedToken = jwt.verify(token, process.env.SECRET);
 
@@ -27,21 +27,16 @@ const requireAuth = async (req, res, next) => {
       }
     }
 
-    req.user = user; // Set user object in request
+    req.user = user; // Set user object in request, null if not authenticated
     next();
   } catch (error) {
     console.error('Authorization error:', error.message);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'JWT malformed or invalid' });
-    } else if (error.message === 'Token expired' || error.message === 'User not found') {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    res.status(401).json({ error: 'Request is not authorized' });
+    next(); // Proceed even if unauthorized, but req.user will be null
   }
 };
 
-
 module.exports = requireAuth;
+
 
 
 

@@ -12,6 +12,22 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const generateVoteEmailContent = ({ proposal, name, opinion, comment, action}) => {
+  const actionVerb = action === 'submit' ? 'submitted' : 'updated';
+  const actionTitle = action === 'submit' ? 'New Vote Submitted' : 'Vote Updated'
+
+  const emailSubject = `${actionTitle}`;
+  const emailContent = `
+    <p>A vote has been ${actionVerb} for your proposal titled "<strong>${proposal.title}</strong>".</p>
+    <p><strong>Submitted by:</strong> ${name}</p>
+    <p><strong>Vote:</strong> ${opinion}</p>
+    <p><strong>Comment:</strong> ${comment}</p>
+    <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
+  `;
+
+  return { emailSubject, emailContent };
+}
+
 const sendEmail = async (to, subject, htmlContent) => {
   try {
     // Check if `to` is an array, if so, join it into a comma-separated string
@@ -41,4 +57,4 @@ const generateVerificationToken = (userId) => {
   return token + userId;
 };
 
-module.exports = { generateVerificationToken, sendEmail };
+module.exports = { generateVerificationToken, generateVoteEmailContent ,sendEmail };

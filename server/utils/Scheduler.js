@@ -1,3 +1,11 @@
+/* 
+    Checks for proposals older than 30 days every day at midnight (0 0 * * *). 
+    If user !subscribed to paid service. flag isExpired. 
+*/
+
+
+
+
 const cron = require('node-cron');
 const Proposal = require('../models/Proposal');
 const User = require('../models/User'); // Assuming you have a User model
@@ -29,10 +37,3 @@ const propCheckExpiredScheduler = () => {
 };
 
 module.exports = propCheckExpiredScheduler;
-
-
-
-
-// checks for proposals older than 30 days every day at midnight (0 0 * * *). 
-
-// If user !subscribed to paid service. flag isExpired. 
