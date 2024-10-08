@@ -3,7 +3,7 @@ const User = require('../models/User');
 const Team = require('../models/Teams');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
-const { sendEmail } = require('../utils/EmailUtils');
+const { sendEmail, generateVoteEmailContent } = require('../utils/EmailUtils');
 
 
 
@@ -275,9 +275,8 @@ const submitVote = async (req, res) => {
   const { id } = req.params;
   const { name, opinion, comment } = req.body;
 
-  // Check Valid Proposal Id
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: 'Invalid proposal ID'});
+    return res.status(400).json({ error: 'Invalid proposal ID' });
   }
 
   try {
@@ -293,14 +292,13 @@ const submitVote = async (req, res) => {
     const addedVote = proposal.votes[proposal.votes.length - 1];
 
     if (proposal.email) {
-      const emailSubject = 'New Vote Submitted';
-      const emailContent = `
-        <p>A new vote has been submitted for your proposal titled "<strong>${proposal.title}</strong>".</p>
-        <p><strong>Submitted by:</strong> ${name}</p>
-        <p><strong>Vote:</strong> ${opinion}</p>
-        <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
-      `;
+      const { emailSubject, emailContent } = generateVoteEmailContent({
+        proposal,
+        name,
+        opinion,
+        comment,
+        action: 'submit'
+      });
 
       await sendEmail(proposal.email, emailSubject, emailContent);
     }
@@ -337,14 +335,13 @@ const updateVote = async (req, res) => {
     voteToUpdate.updatedAt = new Date();
 
     if (proposal.email) {
-      const emailSubject = 'Vote Updated';
-      const emailContent = `
-        <p>A vote has been updated for your proposal titled "<strong>${proposal.title}</strong>".</p>
-        <p><strong> by:</strong> ${name}</p>
-        <p><strong>Updated Vote:</strong> ${opinion}</p>
-        <p><strong>Comment:</strong> ${comment}</p>
-        <p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>
-      `;
+      const { emailSubject, emailContent } = generateVoteEmailContent({
+        proposal,
+        name,
+        opinion,
+        comment,
+        action: 'update'
+      });
 
       await sendEmail(proposal.email, emailSubject, emailContent);
     }
@@ -407,6 +404,9 @@ const checkFirstRender = async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+
 
 module.exports = {
   createProposal,
