@@ -248,10 +248,18 @@ const setParticipatedProposal = async (req, res) => {
   const { proposalId, voteId } = req.body;
 
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).populate('proposals'); // Populate user's proposals
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Check if the proposal belongs to the user
+    const isUserProposal = user.proposals.some(p => p._id.toString() === proposalId);
+
+    // If the proposal belongs to the user, skip adding it to participatedProposals but still allow participation
+    if (isUserProposal) {
+      return res.status(200).json({ success: true, message: "Proposal participation allowed but not tracked in participated proposals" });
     }
 
     const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === proposalId);
@@ -279,9 +287,9 @@ const setParticipatedProposal = async (req, res) => {
   }
 };
 
+
 const getParticipatedProposals = async (req, res) => {
   const userId = req.user._id;
-  const { includeOwnProposals } = req.query; 
 
   try {
     const user = await User.findById(userId).populate({
@@ -293,12 +301,11 @@ const getParticipatedProposals = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    let participatedProposals = user.participatedProposals.map(participation => {
+    // Map the user's participated proposals, ensuring null values are skipped
+    const participatedProposals = user.participatedProposals.map(participation => {
       const proposal = participation.proposalId;
       if (!proposal) {
-        // If the proposal is null, skip this participation
-        // ***Fix for Produced Error On 7/17 Cannot read properties of null(trying to access null votes)
-        return null;
+        return null;  // Skip if proposal is null to avoid errors
       }
       const vote = proposal.votes ? proposal.votes.id(participation.voteId) : null;
       return { 
@@ -307,14 +314,7 @@ const getParticipatedProposals = async (req, res) => {
         uniqueUrl: proposal.uniqueUrl,
         vote 
       };
-    }).filter(participation => participation !== null);
-
-    if (includeOwnProposals === 'false') {
-      // Exclude the user's own proposals
-      participatedProposals = participatedProposals.filter(participation =>
-        !user.proposals.some(p => p.toString() === participation.proposalId.toString())
-      );
-    }
+    }).filter(participation => participation !== null); // Filter out null values
 
     res.status(200).json(participatedProposals);
   } catch (error) {
@@ -322,6 +322,7 @@ const getParticipatedProposals = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const removeParticipatedProposal = async (req, res) => {
   const { id } = req.params; // The proposal ID to be removed
@@ -397,6 +398,51 @@ const archiveProposal = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const archiveParticipatedProposal = async (req, res) => {
+  const { id } = req.params; // The proposal ID
+  const user_id = req.user._id; // The authenticated user's ID
+
+  try {
+    // Find the proposal
+    const proposal = await Proposal.findById(id);
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    // Determine if the proposal is currently archived in participatedProposals
+    const user = await User.findById(user_id);
+    const isCurrentlyArchived = user.archivedParticipatedProposals.includes(id);
+
+    // Update the user's archivedParticipatedProposals list
+    let userUpdate;
+    if (isCurrentlyArchived) {
+      // Remove from archivedParticipatedProposals
+      userUpdate = await User.findOneAndUpdate(
+        { _id: user_id, archivedParticipatedProposals: id },
+        { $pull: { archivedParticipatedProposals: id } },
+        { new: true, runValidators: true }
+      );
+    } else {
+      // Add to archivedParticipatedProposals
+      userUpdate = await User.findOneAndUpdate(
+        { _id: user_id, archivedParticipatedProposals: { $ne: id } },
+        { $push: { archivedParticipatedProposals: id } },
+        { new: true, runValidators: true }
+      );
+    }
+
+    if (!userUpdate) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ message: 'Participated proposal archived state updated successfully' });
+  } catch (error) {
+    console.error('Error in archiveParticipatedProposal function:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 
@@ -490,6 +536,7 @@ module.exports = {
   getParticipatedProposals,
   setParticipatedProposal,
   archiveProposal,
+  archiveParticipatedProposal,
   removeParticipatedProposal,
   checkVerificationStatus,
 };

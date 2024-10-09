@@ -14,6 +14,7 @@ const userSchema = new Schema({
     voteId: { type: Schema.Types.ObjectId } // Reference to the vote within the Proposal
   }],
   archivedProposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal' }], // New field for archived proposals
+  archivedParticipatedProposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal'}],
   userTeams: [{
     _id: { type: Schema.Types.ObjectId, ref: 'Team' },  // Store the reference to the team using `_id`
   }],

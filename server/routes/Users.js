@@ -13,6 +13,7 @@ const {
   setParticipatedProposal,
   removeParticipatedProposal,
   archiveProposal,
+  archiveParticipatedProposal,
   checkVerificationStatus,
   forgotUserPassword,
   resetForgotUserPassword
@@ -40,7 +41,9 @@ router.post('/setParticipatedProposal', requireAuth, setParticipatedProposal);
 router.get('/getParticipatedProposals', requireAuth, getParticipatedProposals);
 router.delete('/removeParticipatedProposal/:id', requireAuth, removeParticipatedProposal);
 
+
 // Filter Routes
 router.post('/archiveProposal/:id', requireAuth, archiveProposal);
+router.post('/archiveParticipatedProposal/:id', requireAuth, archiveParticipatedProposal);
 
 module.exports = router;
