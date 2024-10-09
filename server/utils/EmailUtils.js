@@ -59,9 +59,9 @@ const generateVoteEmailContent = ({ proposal, votes}) => {
   
 } else {
   const emailSubject = 'Multiple Vote Notifications';
-  const emailContent = `<p>Multiple votes have been submitted for your proposal titled "<strong>${proposal.title}</strong>".</p>`;
+  let emailContent = `<p>Multiple votes have been submitted for your proposal titled "<strong>${proposal.title}</strong>".</p>`;
     votes.forEach(vote => {
-      emailContent = `
+      emailContent += `
         <p><strong>Submitted by:</strong> ${vote.name}</p>
         <p><strong>Vote:</strong> ${vote.opinion}</p>
         <p><strong>Comment:</strong> ${vote.comment}</p>
