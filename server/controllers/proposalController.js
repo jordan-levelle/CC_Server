@@ -3,7 +3,7 @@ const User = require('../models/User');
 const Team = require('../models/Teams');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
-const { sendEmail, generateVoteEmailContent } = require('../utils/EmailUtils');
+const { sendEmail, addVoteToQueue, generateVoteEmailContent } = require('../utils/EmailUtils');
 
 
 
@@ -291,17 +291,8 @@ const submitVote = async (req, res) => {
 
     const addedVote = proposal.votes[proposal.votes.length - 1];
 
-    if (proposal.email) {
-      const { emailSubject, emailContent } = generateVoteEmailContent({
-        proposal,
-        name,
-        opinion,
-        comment,
-        action: 'submit'
-      });
-
-      await sendEmail(proposal.email, emailSubject, emailContent);
-    }
+    // Add vote to the notification queue
+    addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
     res.status(200).json({ message: 'Vote submitted successfully', proposal, addedVote });
   } catch (error) {
@@ -334,19 +325,10 @@ const updateVote = async (req, res) => {
     if (name !== undefined) voteToUpdate.name = name;
     voteToUpdate.updatedAt = new Date();
 
-    if (proposal.email) {
-      const { emailSubject, emailContent } = generateVoteEmailContent({
-        proposal,
-        name,
-        opinion,
-        comment,
-        action: 'update'
-      });
-
-      await sendEmail(proposal.email, emailSubject, emailContent);
-    }
-
     await proposal.save();
+
+    // Add updated vote to the notification queue
+    addVoteToQueue(id, proposal, { name, opinion, comment, action: 'update' });
 
     res.status(200).json({ message: 'Vote updated successfully' });
   } catch (error) {
@@ -354,7 +336,6 @@ const updateVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 
 

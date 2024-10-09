@@ -12,12 +12,42 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const generateVoteEmailContent = ({ proposal, name, opinion, comment, action}) => {
-  const actionVerb = action === 'submit' ? 'submitted' : 'updated';
-  const actionTitle = action === 'submit' ? 'New Vote Submitted' : 'Vote Updated'
+const voteNotificationQueue = {};
 
-  const emailSubject = `${actionTitle}`;
-  const emailContent = `
+const addVoteToQueue = (proposalId, proposal, vote) => {
+  if (!voteNotificationQueue[proposalId]) {
+    voteNotificationQueue[proposalId] = [];
+  }
+
+  // Push vote to the queue for this proposal
+  voteNotificationQueue[proposalId].push(vote);
+
+  // Set a timer if not already set
+  if (!voteNotificationQueue[proposalId].timer) {
+    voteNotificationQueue[proposalId].timer = setTimeout(async () => {
+      const votes = voteNotificationQueue[proposalId];
+      delete voteNotificationQueue[proposalId]; // Clear the queue after sending the email
+
+      if (proposal.email) {
+        const { emailSubject, emailContent } = generateVoteEmailContent({ proposal, votes });
+
+        // Send email with the queued votes
+        await sendEmail(proposal.email, emailSubject, emailContent);
+      }
+    }, 120000); // 2-minute delay
+  }
+};
+
+
+const generateVoteEmailContent = ({ proposal, votes}) => {
+  if ( votes.length === 1) {
+    //single vote sub/update
+    const { name, opinion, comment, action } = votes[0];
+    const actionVerb = action === 'submit' ? 'submitted' : 'updated';
+    const actionTitle = action === 'submit' ? 'New Vote Submitted' : 'Vote Updated'
+
+    const emailSubject = `${actionTitle}`;
+    const emailContent = `
     <p>A vote has been ${actionVerb} for your proposal titled "<strong>${proposal.title}</strong>".</p>
     <p><strong>Submitted by:</strong> ${name}</p>
     <p><strong>Vote:</strong> ${opinion}</p>
@@ -26,6 +56,21 @@ const generateVoteEmailContent = ({ proposal, name, opinion, comment, action}) =
   `;
 
   return { emailSubject, emailContent };
+  
+} else {
+  const emailSubject = 'Multiple Vote Notifications';
+  const emailContent = `<p>Multiple votes have been submitted for your proposal titled "<strong>${proposal.title}</strong>".</p>`;
+    votes.forEach(vote => {
+      emailContent += `
+        <p><strong>Submitted by:</strong> ${vote.name}</p>
+        <p><strong>Vote:</strong> ${vote.opinion}</p>
+        <p><strong>Comment:</strong> ${vote.comment}</p>
+        <hr>`;
+    });
+    emailContent += `<p><a href="${process.env.ORIGIN}${proposal.uniqueUrl}">View Proposal</a></p>`;
+
+    return { emailSubject, emailContent };
+  }
 }
 
 const sendEmail = async (to, subject, htmlContent) => {
@@ -57,4 +102,4 @@ const generateVerificationToken = (userId) => {
   return token + userId;
 };
 
-module.exports = { generateVerificationToken, generateVoteEmailContent ,sendEmail };
+module.exports = { addVoteToQueue, sendEmail, generateVoteEmailContent, generateVerificationToken };
