@@ -26,7 +26,7 @@ const getProposal = async (req, res) => {
     }
 
     // Create a proposal object without the userId
-    const { user_Id, ...proposalData } = proposal.toObject(); // Exclude userId from the response
+    const { user_id, ...proposalData } = proposal.toObject(); // Exclude userId from the response
 
     res.status(200).json({ proposal: proposalData }); // Send proposal data without userId
   } catch (error) {
