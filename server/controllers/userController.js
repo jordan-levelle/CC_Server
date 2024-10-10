@@ -398,10 +398,18 @@ const archiveProposal = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 const archiveParticipatedProposal = async (req, res) => {
   const { id } = req.params; // The proposal ID
   const user_id = req.user._id; // The authenticated user's ID
+
+  // Check for valid user and proposal ID
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: 'Unauthorized: User not found' });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid proposal ID' });
+  }
 
   try {
     // Find the proposal
@@ -410,8 +418,13 @@ const archiveParticipatedProposal = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Determine if the proposal is currently archived in participatedProposals
+    // Check if user exists
     const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Determine if the proposal is currently archived
     const isCurrentlyArchived = user.archivedParticipatedProposals.includes(id);
 
     // Update the user's archivedParticipatedProposals list
