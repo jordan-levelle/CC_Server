@@ -26,20 +26,13 @@ const getProposal = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Ensure that both IDs are strings before comparison
-    const isOwner = req.user?._id?.toString() === proposal.user_id.toString();
-
-
-    // Send the proposal data along with ownership info
-    res.status(200).json({
-      proposal,
-      isOwner, // Add this flag to indicate ownership
-    });
+    res.status(200).json({ proposal });
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
