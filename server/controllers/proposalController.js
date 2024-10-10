@@ -26,7 +26,8 @@ const getProposal = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    const isOwner = req.user && req.user._id === proposal.user_id;
+    // Ensure that both IDs are strings before comparison
+    const isOwner = req.user && req.user._id.toString() === proposal.user_id.toString();
 
     // Send the proposal data along with ownership info
     res.status(200).json({
@@ -38,6 +39,7 @@ const getProposal = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
