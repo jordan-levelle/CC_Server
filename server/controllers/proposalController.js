@@ -15,6 +15,8 @@ const getAllProposals = async (req, res) => {
 
 
 
+
+
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
@@ -28,12 +30,16 @@ const getProposal = async (req, res) => {
     // Create a proposal object without the userId
     const { user_id, ...proposalData } = proposal.toObject(); // Exclude userId from the response
 
-    res.status(200).json({ proposal: proposalData }); // Send proposal data without userId
+    // Check if the user making the request is the owner of the proposal
+    const isOwner = req.user && req.user._id.toString() === user_id.toString();
+
+    res.status(200).json({ proposal: proposalData, isOwner }); // Send proposal data without userId and isOwner flag
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
