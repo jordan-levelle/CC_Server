@@ -309,7 +309,7 @@ const getParticipatedProposals = async (req, res) => {
       }
       const vote = proposal.votes ? proposal.votes.id(participation.voteId) : null;
       return { 
-        proposalId: proposal._id, 
+        _id: proposal._id, 
         proposalTitle: proposal.title,
         uniqueUrl: proposal.uniqueUrl,
         vote 
