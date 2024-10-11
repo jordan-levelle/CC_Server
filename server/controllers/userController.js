@@ -405,52 +405,64 @@ const archiveProposal = async (req, res) => {
 
 
 const archiveParticipatedProposal = async (req, res) => {
-  const { id } = req.params; // The proposal ID
+  const { id } = req.params; // The proposal ID from the request
   const user_id = req.user._id; // The authenticated user's ID
-
 
   try {
     // Find the proposal
     const proposal = await Proposal.findById(id);
     if (!proposal) {
+      console.log('Proposal not found:', id);
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Check if user exists
+    // Find the user by their ID
     const user = await User.findById(user_id);
     if (!user) {
+      console.log('User not found:', user_id);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Determine if the proposal is currently archived
-    const isCurrentlyArchived = user.archivedParticipatedProposals.includes(id);
+    // Ensure the IDs are compared as strings
+    const isCurrentlyArchived = user.archivedParticipatedProposals
+      .map(p => p.toString()) // Convert ObjectId to string
+      .includes(id.toString());
+
+    console.log(`isCurrentlyArchived for proposal ${id}:`, isCurrentlyArchived);
 
     // Update the user's archivedParticipatedProposals list
     let userUpdate;
     if (isCurrentlyArchived) {
-      // Remove from archivedParticipatedProposals
+      // Unarchive proposal: Remove from archivedParticipatedProposals
+      console.log('Unarchiving proposal:', id);
       userUpdate = await User.findOneAndUpdate(
-        { _id: user_id, archivedParticipatedProposals: id },
-        { $pull: { archivedParticipatedProposals: id } },
+        { _id: user_id },
+        { $pull: { archivedParticipatedProposals: id } }, // Remove proposal ID from the array
         { new: true, runValidators: true }
       );
     } else {
-      // Add to archivedParticipatedProposals
+      // Archive proposal: Add to archivedParticipatedProposals
+      console.log('Archiving proposal:', id);
       userUpdate = await User.findOneAndUpdate(
-        { _id: user_id, archivedParticipatedProposals: { $ne: id } },
-        { $push: { archivedParticipatedProposals: id } },
+        { _id: user_id },
+        { $push: { archivedParticipatedProposals: id } }, // Add proposal ID to the array
         { new: true, runValidators: true }
       );
     }
 
     if (!userUpdate) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log('User update failed for:', user_id);
+      return res.status(404).json({ error: 'User update failed' });
     }
 
-    return res.status(200).json({ message: 'Participated proposal archived state updated successfully' });
+    console.log('Successfully updated archive state for proposal:', id);
+    return res.status(200).json({ 
+      message: 'Participated proposal archive state updated successfully', 
+      isArchived: !isCurrentlyArchived 
+    });
   } catch (error) {
     console.error('Error in archiveParticipatedProposal function:', error.message);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
