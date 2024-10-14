@@ -274,7 +274,6 @@ const getSubmittedVotes = async (req, res) => {
 
 
 
-
 const submitVote = async (req, res) => {
   const { id } = req.params;
   const { name, opinion, comment } = req.body;
@@ -298,7 +297,12 @@ const submitVote = async (req, res) => {
 
     // Check if the owner is not subscribed and if there are already 15 votes
     if (!owner.subscriptionStatus && proposal.votes.length >= 15) {
-      return res.status(403).json({ error: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.' });
+      return res.status(200).json({
+        message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
+        proposal, // Include proposal data for the frontend to use
+        addedVote: null, // No vote was added
+        limitReached: true, // Add a flag for the frontend to handle
+      });
     }
 
     // Add the new vote
@@ -311,13 +315,17 @@ const submitVote = async (req, res) => {
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
     // Return success message
-    res.status(200).json({ message: 'Vote submitted successfully', proposal, addedVote });
+    res.status(200).json({
+      message: 'Vote submitted successfully',
+      proposal,
+      addedVote,
+      limitReached: false, // The limit wasn't reached
+    });
   } catch (error) {
     console.error('Error submitting vote:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 
 
