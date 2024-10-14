@@ -19,6 +19,7 @@ const proposalSchema = new Schema({
   isExpired: { type: Boolean, default: false},
   isArchived: { type: Boolean, default: false},
   votes: [voteSchema],
+  // Find where limit votes is
   createdAt: {
     type: Date,
     default: Date.now,

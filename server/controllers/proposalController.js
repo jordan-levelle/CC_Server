@@ -284,12 +284,24 @@ const submitVote = async (req, res) => {
   }
 
   try {
+    // Find the proposal
     const proposal = await Proposal.findById(id);
-
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
+    // Find the owner of the proposal
+    const owner = await User.findById(proposal.user_id);
+    if (!owner) {
+      return res.status(404).json({ error: 'Proposal owner not found' });
+    }
+
+    // Check if the owner is not subscribed and if there are already 15 votes
+    if (!owner.subscriptionStatus && proposal.votes.length >= 15) {
+      return res.status(403).json({ error: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.' });
+    }
+
+    // Add the new vote
     proposal.votes.push({ name, opinion, comment });
     await proposal.save();
 
@@ -298,12 +310,14 @@ const submitVote = async (req, res) => {
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
+    // Return success message
     res.status(200).json({ message: 'Vote submitted successfully', proposal, addedVote });
   } catch (error) {
     console.error('Error submitting vote:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
