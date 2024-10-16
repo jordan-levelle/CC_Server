@@ -247,38 +247,48 @@ const forgotUserPassword = async (req, res) => {
 const setParticipatedProposal = async (req, res) => {
   const { proposalId, voteId } = req.body;
 
-  try {
-    const user = await User.findById(req.user.id).populate('proposals'); // Populate user's proposals
+  console.log("Received proposalId:", proposalId);
+  console.log("Received voteId:", voteId);
 
+  try {
+    const user = await User.findById(req.user.id).populate('proposals');
+    
     if (!user) {
+      console.log('User not found:', req.user.id);
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    console.log('Fetched User:', user._id);
+    console.log('User Proposals:', user.proposals.map(p => p._id.toString()));
+
     // Check if the proposal belongs to the user
     const isUserProposal = user.proposals.some(p => p._id.toString() === proposalId);
+    console.log("Is the proposal owned by the user?", isUserProposal);
 
-    // If the proposal belongs to the user, skip adding it to participatedProposals but still allow participation
     if (isUserProposal) {
+      console.log('Proposal belongs to the user. Participation not tracked.');
       return res.status(200).json({ success: true, message: "Proposal participation allowed but not tracked in participated proposals" });
     }
 
     const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === proposalId);
-
+    console.log("Existing participation found?", !!existingParticipation);
+    
     if (existingParticipation) {
-      // Check if voteId already exists
+      console.log("Existing voteId in participation:", existingParticipation.voteId);
       if (existingParticipation.voteId === voteId) {
-        // Remove the voteId when the same voteId is provided to delete
+        console.log("VoteId matches. Removing voteId.");
         existingParticipation.voteId = null;
       } else {
-        // Update existing participation with new voteId
+        console.log("Updating voteId with new voteId:", voteId);
         existingParticipation.voteId = voteId;
       }
     } else {
-      // Add new participation
+      console.log("No existing participation. Adding new participation with proposalId:", proposalId);
       user.participatedProposals.push({ proposalId, voteId });
     }
 
     await user.save();
+    console.log("User updated successfully with new participated proposals.");
 
     return res.status(200).json({ success: true, message: 'Participated proposal updated successfully' });
   } catch (error) {
@@ -286,6 +296,7 @@ const setParticipatedProposal = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error updating participated proposals' });
   }
 };
+
 
 
 const getParticipatedProposals = async (req, res) => {
