@@ -301,11 +301,12 @@ const getParticipatedProposals = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Map the user's participated proposals, ensuring null values are skipped
+    console.log('Fetched User:', user);
+
     const participatedProposals = user.participatedProposals.map(participation => {
       const proposal = participation.proposalId;
       if (!proposal) {
-        return null;  // Skip if proposal is null to avoid errors
+        return null; 
       }
       const vote = proposal.votes ? proposal.votes.id(participation.voteId) : null;
       return { 
@@ -314,14 +315,16 @@ const getParticipatedProposals = async (req, res) => {
         uniqueUrl: proposal.uniqueUrl,
         vote 
       };
-    }).filter(participation => participation !== null); // Filter out null values
+    }).filter(participation => participation !== null);
 
+    console.log('Participated Proposals:', participatedProposals);
     res.status(200).json(participatedProposals);
   } catch (error) {
     console.error('Error fetching participated proposals:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 const removeParticipatedProposal = async (req, res) => {
