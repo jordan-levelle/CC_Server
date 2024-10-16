@@ -289,14 +289,11 @@ const submitVote = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the owner of the proposal
+    // Find the owner of the proposal (this part is optional if you don't need to handle owners)
     const owner = await User.findById(proposal.user_id);
-    if (!owner) {
-      return res.status(404).json({ error: 'Proposal owner not found' });
-    }
 
     // Check if the owner is not subscribed and if there are already 15 votes
-    if (!owner.subscriptionStatus && proposal.votes.length >= 15) {
+    if (owner && !owner.subscriptionStatus && proposal.votes.length >= 15) {
       return res.status(200).json({
         message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
         proposal, // Include proposal data for the frontend to use
