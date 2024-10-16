@@ -4,7 +4,7 @@ const Team = require('../models/Teams');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail, addVoteToQueue, generateVoteEmailContent } = require('../utils/EmailUtils');
-
+const { setParticipatedProposal } = require('./userController');
 
 
 const getAllProposals = async (req, res) => {
@@ -289,16 +289,16 @@ const submitVote = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the owner of the proposal (this part is optional if you don't need to handle owners)
+    // Find the owner of the proposal (optional)
     const owner = await User.findById(proposal.user_id);
 
     // Check if the owner is not subscribed and if there are already 15 votes
     if (owner && !owner.subscriptionStatus && proposal.votes.length >= 15) {
       return res.status(200).json({
         message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
-        proposal, // Include proposal data for the frontend to use
-        addedVote: null, // No vote was added
-        limitReached: true, // Add a flag for the frontend to handle
+        proposal,
+        addedVote: null,
+        limitReached: true,
       });
     }
 
@@ -308,6 +308,14 @@ const submitVote = async (req, res) => {
 
     const addedVote = proposal.votes[proposal.votes.length - 1];
 
+    // Call setParticipatedProposal to track participation
+    const userId = req.user.id; // Assuming req.user.id is available
+    const voteId = addedVote._id; // Assuming the vote ID is added to the proposal
+    const proposalId = proposal._id;
+
+    // Call the function to track participation
+    await setParticipatedProposal({ body: { proposalId, voteId }, user: { id: userId } }, res);
+
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
@@ -316,13 +324,14 @@ const submitVote = async (req, res) => {
       message: 'Vote submitted successfully',
       proposal,
       addedVote,
-      limitReached: false, // The limit wasn't reached
+      limitReached: false,
     });
   } catch (error) {
     console.error('Error submitting vote:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
