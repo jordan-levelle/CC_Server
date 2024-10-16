@@ -251,7 +251,8 @@ const setParticipatedProposal = async (req, res) => {
   console.log("Received voteId:", voteId);
 
   try {
-    const user = await User.findById(req.user.id).populate('proposals');
+    // Find the user and populate participatedProposals
+    const user = await User.findById(req.user.id);
     
     if (!user) {
       console.log('User not found:', req.user.id);
@@ -259,21 +260,13 @@ const setParticipatedProposal = async (req, res) => {
     }
 
     console.log('Fetched User:', user._id);
-    console.log('User Proposals:', user.proposals.map(p => p._id.toString()));
 
-    // Check if the proposal belongs to the user
-    const isUserProposal = user.proposals.some(p => p._id.toString() === proposalId);
-    console.log("Is the proposal owned by the user?", isUserProposal);
-
-    if (isUserProposal) {
-      console.log('Proposal belongs to the user. Participation not tracked.');
-      return res.status(200).json({ success: true, message: "Proposal participation allowed but not tracked in participated proposals" });
-    }
-
+    // Find existing participation for the proposal
     const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === proposalId);
     console.log("Existing participation found?", !!existingParticipation);
     
     if (existingParticipation) {
+      // Update or remove the voteId
       console.log("Existing voteId in participation:", existingParticipation.voteId);
       if (existingParticipation.voteId === voteId) {
         console.log("VoteId matches. Removing voteId.");
@@ -283,6 +276,7 @@ const setParticipatedProposal = async (req, res) => {
         existingParticipation.voteId = voteId;
       }
     } else {
+      // Add new participation if not found
       console.log("No existing participation. Adding new participation with proposalId:", proposalId);
       user.participatedProposals.push({ proposalId, voteId });
     }
@@ -293,9 +287,10 @@ const setParticipatedProposal = async (req, res) => {
     return res.status(200).json({ success: true, message: 'Participated proposal updated successfully' });
   } catch (error) {
     console.error('Error updating participated proposals:', error.message);
-    res.status(500).json({ success: false, message: 'Error updating participated proposals' });
+    return res.status(500).json({ success: false, message: 'Error updating participated proposals' });
   }
 };
+
 
 
 
