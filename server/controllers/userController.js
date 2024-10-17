@@ -296,45 +296,27 @@ const getParticipatedProposals = async (req, res) => {
 
   try {
     // Fetch the user and populate the participatedProposals with related proposal data
-    const user = await User.findById(userId).populate({
-      path: 'participatedProposals.proposalId',
-      model: 'Proposal',
-    });
+    const user = await User.findById(userId).populate('participatedProposals.proposalId');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('Fetched User with Populated Proposals:', JSON.stringify(user.participatedProposals, null, 2));
+    // Map over participatedProposals and extract relevant data
+    const participatedProposals = user.participatedProposals
+      .filter(participation => participation.proposalId) // Ensure the proposal exists
+      .map(participation => {
+        const { _id, title, uniqueUrl, votes } = participation.proposalId;
+        const vote = votes?.find(v => v._id.equals(participation.voteId));
 
-    // Map over participatedProposals and extract relevant proposal data
-    const participatedProposals = user.participatedProposals.map(participation => {
-      const proposal = participation.proposalId;
-
-      if (!proposal) {
-        console.log('No proposal found for participation:', participation);
-        return null; // Skip if the proposal is not found
-      }
-
-      // Log the proposal for debugging
-      console.log('Proposal found:', proposal);
-
-      // Find the corresponding vote using the voteId
-      const vote = proposal.votes ? proposal.votes.find(vote => vote._id.equals(participation.voteId)) : null;
-
-      // Log the vote for debugging
-      console.log('Corresponding Vote:', vote);
-
-      return { 
-        _id: proposal._id, 
-        proposalTitle: proposal.title,
-        uniqueUrl: proposal.uniqueUrl,
-        vote 
-      };
-    }).filter(participation => participation !== null); // Filter out null entries
-
-    // Log the final array of participated proposals
-    console.log('Participated Proposals:', participatedProposals);
+        return { 
+          _id, 
+          proposalTitle: title, 
+          uniqueUrl, 
+          vote, 
+          isArchived: participation.isArchived 
+        };
+      });
 
     // Return the participated proposals
     res.status(200).json(participatedProposals);
