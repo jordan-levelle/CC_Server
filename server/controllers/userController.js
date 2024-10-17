@@ -290,7 +290,6 @@ const setParticipatedProposal = async (req, res) => {
 
 
 
-
 const getParticipatedProposals = async (req, res) => {
   const userId = req.user._id;
 
@@ -306,7 +305,7 @@ const getParticipatedProposals = async (req, res) => {
     const participatedProposals = user.participatedProposals
       .filter(participation => participation.proposalId) // Ensure the proposal exists
       .map(participation => {
-        const { _id, title, uniqueUrl, votes } = participation.proposalId;
+        const { _id, title, uniqueUrl, votes, isArchived } = participation.proposalId; // Extract isArchived here
         const vote = votes?.find(v => v._id.equals(participation.voteId));
 
         return { 
@@ -314,7 +313,7 @@ const getParticipatedProposals = async (req, res) => {
           proposalTitle: title, 
           uniqueUrl, 
           vote, 
-          isArchived: participation.isArchived 
+          isArchived  // Include isArchived in the returned object
         };
       });
 
