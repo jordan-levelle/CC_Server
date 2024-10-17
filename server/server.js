@@ -7,16 +7,16 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
-const { Server } = require('socket.io');
+// const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin:'*',
-    method: ['GET', 'POST'],
-  },
-});
+// const io = new Server(server, {
+//   cors: {
+//     origin:'*',
+//     method: ['GET', 'POST'],
+//   },
+// });
 app.use(cors());
 
 // Use JSON middleware globally, but not for webhooks
