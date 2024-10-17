@@ -4,7 +4,7 @@ const Team = require('../models/Teams');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
 const { sendEmail, addVoteToQueue, generateVoteEmailContent } = require('../utils/EmailUtils');
-const { setParticipatedProposal } = require('./userController');
+
 
 
 const getAllProposals = async (req, res) => {

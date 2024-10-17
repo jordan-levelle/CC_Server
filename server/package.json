@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "A Group Consensus Web Application",
   "engines": {
-    "node": "20.x",
-    "npm": "10.8.3"
+  "node": ">=20.x",
+  "npm": ">=10.8.3"
   },
   "main": "server.js",
   "scripts": {
@@ -27,6 +27,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.13",
     "nodemon": "^3.0.2",
+    "socket.io": "^4.8.0",
     "stripe": "^16.2.0",
     "uuidv4": "^6.2.13",
     "validator": "^13.11.0"
