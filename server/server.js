@@ -20,6 +20,7 @@ const app = express();
 // });
 app.use(cors());
 app.use(fileUpload());
+app.use(express.urlencoded({ extended: true }));
 
 // Use JSON middleware globally, but not for webhooks
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));

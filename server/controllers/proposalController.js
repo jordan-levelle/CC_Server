@@ -47,23 +47,23 @@ const getProposal = async (req, res) => {
 
 
 const createProposal = async (req, res) => {
-  const { title, description, name, email, teamId } = req.body;
-
-  if (!title || !description) {
-    return res.status(400).json({ error: 'Title and description are required' });
-  }
-
   try {
-    const { nanoid } = await import('nanoid'); // Dynamically import nanoid
+    const { title, description, name, email, teamId } = req.body;
+
+    // Validation for required fields
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Title and description are required' });
+    }
+
     const uniqueUrl = nanoid(10);
     const userId = req.user ? req.user._id : process.env.DUMMY_USER;
     const emailValue = email || null;
     const nameValue = name || '';
 
-    // Retrieve the team name if teamId is provided
+    // Retrieve team name if teamId is provided
     let teamName = null;
     if (teamId) {
-      const team = await Team.findById(teamId).populate('members'); // Populate members of the team
+      const team = await Team.findById(teamId).populate('members');
       if (team) {
         teamName = team.teamName;
       } else {
@@ -78,27 +78,29 @@ const createProposal = async (req, res) => {
       email: emailValue,
       user_id: userId,
       uniqueUrl,
-      teamId: teamId || null, 
-      teamName: teamName || null, 
+      teamId: teamId || null,
+      teamName: teamName || null,
     };
 
-    if(req.files && req.files.file) {
+    // Handle file upload if it exists
+    if (req.files && req.files.file) {
       const uploadedFile = req.files.file;
 
+      // Specify file storage path and save the file
       const filePath = `./uploads/${uploadedFile.name}`;
-
-      await uploadedFile.my(filePath, function(err) {
-        if(err) {
+      await uploadedFile.mv(filePath, function (err) {
+        if (err) {
           console.error('File upload failed: ', err);
           return res.status(500).send(err);
         }
         console.log('File Uploaded Successfully');
       });
 
+      // Add file details to proposalData
       proposalData.file = {
         fileName: uploadedFile.name,
         filePath: filePath,
-        mimeType: uploadedFile.mimeType
+        mimeType: uploadedFile.mimetype
       };
     }
 
@@ -115,7 +117,7 @@ const createProposal = async (req, res) => {
 
     // Send email to the creator if email is provided
     if (emailValue) {
-      const uniqueId = uuidv4(); 
+      const uniqueId = uuidv4();
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
         <p>You submitted a new proposal!</p>
@@ -127,26 +129,23 @@ const createProposal = async (req, res) => {
       await sendEmail(emailValue, emailSubject, emailContent);
     }
 
-    // If teamId is provided, notify the team members
+    // Notify team members if teamId is provided
     if (teamId && teamName) {
-      const team = await Team.findById(teamId).populate('members'); 
-
+      const team = await Team.findById(teamId).populate('members');
       if (team && team.members.length > 0) {
-        const memberEmails = team.members.map(member => member.memberEmail);
-
+        const memberEmails = team.members.map((member) => member.memberEmail);
         const teamEmailSubject = `New Proposal: ${title}`;
         const teamEmailContent = `
           <p><strong>Title:</strong> ${title}</p>
           <p><strong>Submitted by:</strong> ${nameValue}</p>
           <p><strong>Description:</strong> ${description}</p>
-          <p>New proposal has been submitted to your team: ${teamName}</p>
+          <p>A new proposal has been submitted to your team: ${teamName}</p>
           <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         `;
         await sendEmail(memberEmails, teamEmailSubject, teamEmailContent);
-      } else {
-        console.log("No members found in the selected team.");
       }
     }
+
     res.status(200).json(proposal);
 
   } catch (error) {
@@ -154,7 +153,6 @@ const createProposal = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 
 
 
