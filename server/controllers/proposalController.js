@@ -49,12 +49,7 @@ const getProposal = async (req, res) => {
 const createProposal = async (req, res) => {
   try {
     const { title, description, name, email, teamId } = req.body;
-
-    // Validation for required fields
-    if (!title || !description) {
-      return res.status(400).json({ error: 'Title and description are required' });
-    }
-
+    
     const uniqueUrl = nanoid(10);
     const userId = req.user ? req.user._id : process.env.DUMMY_USER;
     const emailValue = email || null;
