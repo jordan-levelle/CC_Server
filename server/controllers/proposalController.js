@@ -49,25 +49,16 @@ const getProposal = async (req, res) => {
 const createProposal = async (req, res) => {
   const { title, description, name, email, teamId } = req.body;
 
-  // Validate required fields
   if (!title || !description) {
     return res.status(400).json({ error: 'Title and description are required' });
   }
 
   try {
     const { nanoid } = await import('nanoid'); // Dynamically import nanoid
-
-    // Generate Unique URL
     const uniqueUrl = nanoid(10);
-
-    // Use DUMMY_USER if req.user is not available
     const userId = req.user ? req.user._id : process.env.DUMMY_USER;
-
     const emailValue = email || null;
     const nameValue = name || '';
-
-    // // Log the proposal details being created
-    // console.log("Creating proposal with data:", { title, description, name: nameValue, email: emailValue, userId });
 
     // Retrieve the team name if teamId is provided
     let teamName = null;
@@ -80,7 +71,6 @@ const createProposal = async (req, res) => {
       }
     }
 
-    // Proposal data object
     const proposalData = {
       title,
       description,
@@ -88,15 +78,31 @@ const createProposal = async (req, res) => {
       email: emailValue,
       user_id: userId,
       uniqueUrl,
-      teamId: teamId || null, // Add teamId if present
-      teamName: teamName || null, // Add teamName if present
+      teamId: teamId || null, 
+      teamName: teamName || null, 
     };
 
-    // Create the proposal
-    const proposal = await Proposal.create(proposalData);
+    if(req.files && req.files.file) {
+      const uploadedFile = req.files.file;
 
-    // Log proposal creation success
-    // console.log("Proposal created successfully with ID:", proposal._id);
+      const filePath = `./uploads/${uploadedFile.name}`;
+
+      await uploadedFile.my(filePath, function(err) {
+        if(err) {
+          console.error('File upload failed: ', err);
+          return res.status(500).send(err);
+        }
+        console.log('File Uploaded Successfully');
+      });
+
+      proposalData.file = {
+        fileName: uploadedFile.name,
+        filePath: filePath,
+        mimeType: uploadedFile.mimeType
+      };
+    }
+
+    const proposal = await Proposal.create(proposalData);
 
     // Associate proposal with user if not using DUMMY_USER
     if (userId !== process.env.DUMMY_USER) {
@@ -105,12 +111,11 @@ const createProposal = async (req, res) => {
         { $push: { proposals: proposal._id } },
         { new: true }
       );
-      // console.log("Proposal associated with user ID:", userId);
     }
 
     // Send email to the creator if email is provided
     if (emailValue) {
-      const uniqueId = uuidv4(); // Generate a unique ID for edit link
+      const uniqueId = uuidv4(); 
       const emailSubject = 'New Proposal Submitted';
       const emailContent = `
         <p>You submitted a new proposal!</p>
@@ -119,16 +124,12 @@ const createProposal = async (req, res) => {
         <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         <p><a href="${process.env.ORIGIN}edit/${uniqueId}/${uniqueUrl}">Link to Edit Proposal</a></p>
       `;
-
-      // Log email being sent to the proposal creator
-      // console.log(`Sending email to proposal creator: ${emailValue}`);
       await sendEmail(emailValue, emailSubject, emailContent);
-      // console.log("Email sent to creator successfully.");
     }
 
     // If teamId is provided, notify the team members
     if (teamId && teamName) {
-      const team = await Team.findById(teamId).populate('members'); // Populate members of the team
+      const team = await Team.findById(teamId).populate('members'); 
 
       if (team && team.members.length > 0) {
         const memberEmails = team.members.map(member => member.memberEmail);
@@ -141,20 +142,11 @@ const createProposal = async (req, res) => {
           <p>New proposal has been submitted to your team: ${teamName}</p>
           <p><a href="${process.env.ORIGIN}${uniqueUrl}">Link to Proposal</a></p>
         `;
-
-        // Log team notification details
-        // console.log(`Sending notifications to team: ${teamName}`);
-        // console.log("Team members being notified:", memberEmails);
-
-        // Send email to all team members
         await sendEmail(memberEmails, teamEmailSubject, teamEmailContent);
-        // console.log("Email sent to team members successfully.");
       } else {
         console.log("No members found in the selected team.");
       }
     }
-
-    // Return the newly created proposal as response
     res.status(200).json(proposal);
 
   } catch (error) {

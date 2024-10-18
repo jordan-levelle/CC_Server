@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const fileUpload = require('express-fileupload');
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
@@ -18,6 +19,7 @@ const app = express();
 //   },
 // });
 app.use(cors());
+app.use(fileUpload());
 
 // Use JSON middleware globally, but not for webhooks
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
