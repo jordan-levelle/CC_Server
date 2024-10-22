@@ -4,6 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const fileUpload = require('express-fileupload');
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
+const documentRoutes = require('./routes/Documents.js');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 });
 
 // routes
+app.use('./api/documents', documentRoutes );
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);

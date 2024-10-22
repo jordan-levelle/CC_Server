@@ -59,7 +59,7 @@ const createProposal = async (req, res) => {
     // Retrieve the team name if teamId is provided
     let teamName = null;
     if (teamId) {
-      const team = await Team.findById(teamId).populate('members'); // Populate members of the team
+      const team = await Team.findById(teamId).populate('members');
       if (team) {
         teamName = team.teamName;
       } else {
@@ -77,26 +77,6 @@ const createProposal = async (req, res) => {
       teamId: teamId || null, 
       teamName: teamName || null, 
     };
-
-    if(req.files && req.files.file) {
-      const uploadedFile = req.files.file;
-
-      const filePath = `./uploads/${uploadedFile.name}`;
-
-      await uploadedFile.my(filePath, function(err) {
-        if(err) {
-          console.error('File upload failed: ', err);
-          return res.status(500).send(err);
-        }
-        console.log('File Uploaded Successfully');
-      });
-
-      proposalData.file = {
-        fileName: uploadedFile.name,
-        filePath: filePath,
-        mimeType: uploadedFile.mimeType
-      };
-    }
 
     const proposal = await Proposal.create(proposalData);
 
@@ -126,7 +106,6 @@ const createProposal = async (req, res) => {
     // If teamId is provided, notify the team members
     if (teamId && teamName) {
       const team = await Team.findById(teamId).populate('members'); 
-
       if (team && team.members.length > 0) {
         const memberEmails = team.members.map(member => member.memberEmail);
 
@@ -143,6 +122,7 @@ const createProposal = async (req, res) => {
         console.log("No members found in the selected team.");
       }
     }
+
     res.status(200).json(proposal);
 
   } catch (error) {
@@ -150,8 +130,6 @@ const createProposal = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
-
 
 
 const deleteProposal = async (req, res) => {

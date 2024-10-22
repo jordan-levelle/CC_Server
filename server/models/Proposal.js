@@ -19,11 +19,10 @@ const proposalSchema = new Schema({
   isExpired: { type: Boolean, default: false},
   isArchived: { type: Boolean, default: false},
   votes: [voteSchema],
-  file: {
-    fileName: { type: String },
-    filePath: { type: String },
-    mineType: { type: String },
-  },
+  documents: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Document'
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
