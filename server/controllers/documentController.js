@@ -1,3 +1,4 @@
+// controllers/documentController.js
 const Document = require('../models/Document');
 const Proposal = require('../models/Proposal');
 
@@ -11,21 +12,18 @@ const documentUpload = async (req, res) => {
 
   const uploadedFile = req.files.file;
 
-  // Construct the file path where the file will be stored
-  const filePath = `./uploads/${uploadedFile.name}`; // Adjust the path as needed
+  // Convert the file to Base64
+  const fileData = uploadedFile.data.toString('base64');
+
+  // Create a new document entry in the database
+  const documentData = {
+    fileName: uploadedFile.name,
+    fileData, // Store the Base64 data
+    mimeType: uploadedFile.mimetype,
+    proposalId,
+  };
 
   try {
-    // Move the file to the uploads directory
-    await uploadedFile.mv(filePath);
-
-    // Create a new document entry in the database
-    const documentData = {
-      fileName: uploadedFile.name,
-      filePath,
-      mimeType: uploadedFile.mimetype,
-      proposalId
-    };
-
     const document = await Document.create(documentData);
 
     // Add reference to the document in the associated proposal
@@ -43,5 +41,5 @@ const documentUpload = async (req, res) => {
 };
 
 module.exports = {
-  documentUpload
+  documentUpload,
 };

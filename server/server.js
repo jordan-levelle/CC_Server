@@ -9,18 +9,12 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
-// const { Server } = require('socket.io');
 
 const app = express();
-// const server = http.createServer(app);
-// const io = new Server(server, {
-//   cors: {
-//     origin:'*',
-//     method: ['GET', 'POST'],
-//   },
-// });
+
+// Middleware
 app.use(cors());
-app.use(fileUpload());
+app.use(fileUpload()); // Middleware for handling file uploads
 app.use(express.urlencoded({ extended: true }));
 
 // Use JSON middleware globally, but not for webhooks
@@ -31,26 +25,24 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Consensus Check API!');
 });
 
-// routes
-app.use('./api/documents', documentRoutes );
+// Routes
+app.use('/api/documents', documentRoutes);
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
-// connect to db
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-
     propCheckExpiredScheduler();
     app.listen(process.env.PORT || 3000, () => {
-      console.log('connected to db & listening on port', process.env.PORT)
-    })
+      console.log('Connected to db & listening on port', process.env.PORT);
+    });
   })
   .catch((error) => {
-    console.log(error)
+    console.error('MongoDB connection error:', error);
   });
-
 
 
   
