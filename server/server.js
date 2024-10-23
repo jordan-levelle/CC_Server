@@ -20,7 +20,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO with CORS settings
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL, // Allow requests only from your frontend
+    origin: process.env.ORIGIN, // Allow requests only from your frontend
     methods: ['GET', 'POST'],
     credentials: true, // Allow cookies if needed
   }
@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL, // Allow only your frontend origin
+  origin: process.env.ORIGIN, // Allow only your frontend origin
   methods: ['GET', 'POST'],
   credentials: true, // Allow credentials (if using cookies or auth headers)
 }));
