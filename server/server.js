@@ -17,8 +17,14 @@ const app = express();
 // Create an HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.IO
-const io = socketIo(server);
+// Initialize Socket.IO with CORS settings
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.CLIENT_URL, // Allow requests only from your frontend
+    methods: ['GET', 'POST'],
+    credentials: true, // Allow cookies if needed
+  }
+});
 
 // Middleware to make `io` accessible in routes
 app.use((req, res, next) => {
@@ -27,10 +33,15 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL, // Allow only your frontend origin
+  methods: ['GET', 'POST'],
+  credentials: true, // Allow credentials (if using cookies or auth headers)
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
 
+// Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
@@ -47,7 +58,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/documents', documentRoutes);
-app.use('/api/proposals', proposalRoutes); // Pass io to proposal routes
+app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
