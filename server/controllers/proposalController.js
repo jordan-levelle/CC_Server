@@ -255,40 +255,48 @@ const submitVote = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the owner of the proposal (this part is optional if you don't need to handle owners)
+    // Find the owner of the proposal
     const owner = await User.findById(proposal.user_id);
 
-    // Check if the owner is not subscribed and if there are already 15 votes
+    // Check if owner is not subscribed and if votes exceed the limit
     if (owner && !owner.subscriptionStatus && proposal.votes.length >= 15) {
       return res.status(200).json({
         message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
-        proposal, // Include proposal data for the frontend to use
-        addedVote: null, // No vote was added
-        limitReached: true, // Add a flag for the frontend to handle
+        proposal,
+        addedVote: null, // No vote added
+        limitReached: true,
       });
     }
 
-    // Add the new vote
-    proposal.votes.push({ name, opinion, comment });
+    // Define the new vote
+    const addedVote = { name, opinion, comment };
+
+    // Add the new vote to the proposal
+    proposal.votes.push(addedVote);
     await proposal.save();
 
-    const addedVote = proposal.votes[proposal.votes.length - 1];
+    // Emit vote submission event via Socket.IO
+    io.emit('voteSubmitted', {
+      proposalId: id,
+      newVote: addedVote,
+    });
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
-    // Return success message
+    // Send success response
     res.status(200).json({
       message: 'Vote submitted successfully',
       proposal,
-      addedVote,
-      limitReached: false, // The limit wasn't reached
+      addedVote, // Include the newly added vote
+      limitReached: false,
     });
   } catch (error) {
     console.error('Error submitting vote:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
