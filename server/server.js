@@ -20,12 +20,15 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = socketIo(server);
 
+// Middleware to make `io` accessible in routes
+app.use((req, res, next) => {
+  req.io = io; // Attach io instance to req object
+  next();
+});
+
 // Middleware
 app.use(cors());
-
 app.use(express.urlencoded({ extended: true }));
-
-// Use JSON middleware globally, but not for webhooks
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
 
 io.on('connection', (socket) => {
@@ -44,7 +47,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/documents', documentRoutes);
-app.use('/api/proposals', proposalRoutes);
+app.use('/api/proposals', proposalRoutes); // Pass io to proposal routes
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
@@ -53,13 +56,10 @@ app.use('/api/webhooks', webhookRoutes);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     propCheckExpiredScheduler();
-    app.listen(process.env.PORT || 3000, () => {
+    server.listen(process.env.PORT || 3000, () => {
       console.log('Connected to db & listening on port', process.env.PORT);
     });
   })
   .catch((error) => {
     console.error('MongoDB connection error:', error);
   });
-
-
-  

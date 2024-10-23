@@ -258,13 +258,13 @@ const submitVote = async (req, res) => {
     // Find the owner of the proposal
     const owner = await User.findById(proposal.user_id);
 
-    // Check if owner is not subscribed and if votes exceed the limit
+    // Check if the owner is not subscribed and if there are already 15 votes
     if (owner && !owner.subscriptionStatus && proposal.votes.length >= 15) {
       return res.status(200).json({
         message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
-        proposal,
-        addedVote: null, // No vote added
-        limitReached: true,
+        proposal, // Include proposal data for the frontend to use
+        addedVote: null, // No vote was added
+        limitReached: true, // Add a flag for the frontend to handle
       });
     }
 
@@ -275,8 +275,8 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
-    // Emit vote submission event via Socket.IO
-    io.emit('voteSubmitted', {
+    // Emit vote submission event via Socket.IO (now using req.io)
+    req.io.emit('voteSubmitted', {
       proposalId: id,
       newVote: addedVote,
     });
@@ -296,6 +296,7 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 

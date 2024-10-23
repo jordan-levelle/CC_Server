@@ -16,7 +16,6 @@ const {
 } = require('../controllers/proposalController');
 
 // Routes related to proposals
-
 router.get('/all', requireAuth, getAllProposals);
 router.post('/', requireAuth, createProposal);
 router.delete('/:id', requireAuth, deleteProposal);
@@ -26,7 +25,7 @@ router.put('/:uniqueUrl', updateProposal);
 router.get('/:uniqueUrl', requireAuth, getProposal);
 router.get('/:id/firstRender', checkFirstRender);
 router.get('/:id/votes', getSubmittedVotes);
-router.post('/:id/vote', submitVote);
+router.post('/:id/vote', submitVote); // submitVote can now use req.io
 router.delete('/votes/:id', deleteVote);
 
 module.exports = router;
