@@ -27,13 +27,16 @@ const getProposal = async (req, res) => {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Create a proposal object without the userId
-    const { user_id, ...proposalData } = proposal.toObject(); // Exclude userId from the response
-
-    // Check if the user making the request is the owner of the proposal
+    const { user_id, ...proposalData } = proposal.toObject();
     const isOwner = req.user && req.user._id.toString() === user_id.toString();
 
-    res.status(200).json({ proposal: proposalData, isOwner }); // Send proposal data without userId and isOwner flag
+    const roomId = proposal._id.toString();
+    req.io.on('connection', (socket) => {
+      socket.join(roomId);
+      console.log(`User joined room for proposal: ${roomId}`)
+    })
+
+    res.status(200).json({ proposal: proposalData, isOwner }); 
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -275,11 +278,12 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
-    // Emit vote submission event via Socket.IO (now using req.io)
-    // req.io.emit('voteSubmitted', {
-    //   proposalId: id,
-    //   newVote: addedVote,
-    // });
+     // Notify all users in the room about the new vote
+     const roomId = proposal._id.toString();
+     req.io.to(roomId).emit('voteSubmitted', {
+       proposalId: roomId,
+       newVote: addedVote,
+     });
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
