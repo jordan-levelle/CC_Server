@@ -276,10 +276,10 @@ const submitVote = async (req, res) => {
     await proposal.save();
 
     // Emit vote submission event via Socket.IO (now using req.io)
-    req.io.emit('voteSubmitted', {
-      proposalId: id,
-      newVote: addedVote,
-    });
+    // req.io.emit('voteSubmitted', {
+    //   proposalId: id,
+    //   newVote: addedVote,
+    // });
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
