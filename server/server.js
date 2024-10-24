@@ -12,20 +12,10 @@ const webhookRoutes = require('./webhooks/webhookHandler');
 
 const app = express();
 
-// Middleware
-const allowedOrigins = [process.env.ORIGIN, 'http://localhost:3000']; // Add localhost to allowed origins
-
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST'],
-  credentials: true, // Allow credentials (if using cookies or auth headers)
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow more HTTP methods if needed
+  credentials: true, // Allow credentials (cookies, auth headers)
 }));
 
 app.use(express.urlencoded({ extended: true }));

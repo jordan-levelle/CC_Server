@@ -258,10 +258,24 @@ const setParticipatedProposal = async (req, res) => {
 
     console.log('Fetched User:', user._id);
 
+    // Find the proposal to check ownership
+    const proposal = await Proposal.findById(proposalId);
+
+    if (!proposal) {
+      console.log('Proposal not found:', proposalId);
+      return res.status(404).json({ success: false, message: 'Proposal not found' });
+    }
+
+    // Check if the current user is the owner of the proposal
+    if (proposal.user_id.toString() === req.user._id.toString()) {
+      console.log("User owns the proposal. Skipping adding to participated proposals.");
+      return res.status(200).json({ success: true, message: 'Owner cannot add proposal to participated proposals.' });
+    }
+
     // Find existing participation for the proposal
     const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === proposalId);
     console.log("Existing participation found?", !!existingParticipation);
-    
+
     if (existingParticipation) {
       // Update or remove the voteId
       console.log("Existing voteId in participation:", existingParticipation.voteId);
