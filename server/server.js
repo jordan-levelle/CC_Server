@@ -36,9 +36,10 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
 
-// Make io accessible within routes and controllers
+// Make io and voteEmitter accessible within routes and controllers
 app.use((req, res, next) => {
   req.io = io;
+  req.voteEmitter = voteEmitter; // Add voteEmitter to the request object
   next();
 });
 
