@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Team = require('../models/Teams');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid'); 
+const { voteEmitter } = require('../webhooks/socketHandler')
 const { sendEmail, addVoteToQueue, generateVoteEmailContent } = require('../utils/EmailUtils');
 
 
