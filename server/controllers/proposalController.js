@@ -21,27 +21,38 @@ const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
   try {
-    let proposal = await Proposal.findOne({ uniqueUrl });
+    // Find the proposal by uniqueUrl
+    const proposal = await Proposal.findOne({ uniqueUrl });
 
+    // Handle case where proposal is not found
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
+    // Extract user ID and prepare proposal data
     const { user_id, ...proposalData } = proposal.toObject();
     const isOwner = req.user && req.user._id.toString() === user_id.toString();
 
-    const roomId = proposal._id.toString();
+    // Join the room for real-time updates based on uniqueUrl
+    const roomId = uniqueUrl; // Use uniqueUrl for the room
     req.io.on('connection', (socket) => {
       socket.join(roomId);
-      console.log(`User joined room for proposal: ${roomId}`)
-    })
+      console.log(`User joined room for proposal: ${roomId}`);
+      
+      // Optional: Add a listener for disconnect
+      socket.on('disconnect', () => {
+        console.log(`User left room for proposal: ${roomId}`);
+      });
+    });
 
-    res.status(200).json({ proposal: proposalData, isOwner }); 
+    // Respond with the proposal data and ownership status
+    res.status(200).json({ proposal: proposalData, isOwner });
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
@@ -278,12 +289,14 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
+ 
      // Notify all users in the room about the new vote
-     const roomId = proposal._id.toString();
-     req.io.to(roomId).emit('voteSubmitted', {
-       proposalId: roomId,
-       newVote: addedVote,
-     });
+    const roomId = uniqueUrl; // Assigning uniqueUrl to roomId if you're using it as the room identifier
+      req.io.to(roomId).emit('voteSubmitted', {
+      proposalId: roomId,
+      newVote: addedVote,
+    });
+
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
