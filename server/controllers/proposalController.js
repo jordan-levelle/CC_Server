@@ -243,7 +243,7 @@ const getSubmittedVotes = async (req, res) => {
 
 
 const submitVote = async (req, res) => {
-  const { id, uniqueUrl } = req.params;
+  const { id, roomId } = req.params;
   const { name, opinion, comment } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -277,7 +277,7 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
-    req.voteEmitter.emit('newVote', proposal._id, addedVote); // Emit here
+    req.voteEmitter.emit('newVote', roomId, addedVote); // Emit here
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
