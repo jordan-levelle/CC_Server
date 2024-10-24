@@ -16,7 +16,6 @@ const getAllProposals = async (req, res) => {
 
 
 
-
 const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
@@ -33,25 +32,14 @@ const getProposal = async (req, res) => {
     const { user_id, ...proposalData } = proposal.toObject();
     const isOwner = req.user && req.user._id.toString() === user_id.toString();
 
-    // Join the room for real-time updates based on uniqueUrl
-    const roomId = uniqueUrl; // Use uniqueUrl for the room
-    req.io.on('connection', (socket) => {
-      socket.join(roomId);
-      console.log(`User joined room for proposal: ${roomId}`);
-      
-      // Optional: Add a listener for disconnect
-      socket.on('disconnect', () => {
-        console.log(`User left room for proposal: ${roomId}`);
-      });
-    });
-
-    // Respond with the proposal data and ownership status
+    // No need to handle socket connection here; just return proposal data
     res.status(200).json({ proposal: proposalData, isOwner });
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
@@ -276,9 +264,9 @@ const submitVote = async (req, res) => {
     if (owner && !owner.subscriptionStatus && proposal.votes.length >= 15) {
       return res.status(200).json({
         message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
-        proposal, // Include proposal data for the frontend to use
-        addedVote: null, // No vote was added
-        limitReached: true, // Add a flag for the frontend to handle
+        proposal,
+        addedVote: null,
+        limitReached: true,
       });
     }
 
@@ -289,15 +277,6 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
- 
-     // Notify all users in the room about the new vote
-    const roomId = uniqueUrl; // Assigning uniqueUrl to roomId if you're using it as the room identifier
-      req.io.to(roomId).emit('voteSubmitted', {
-      proposalId: roomId,
-      newVote: addedVote,
-    });
-
-
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
@@ -305,7 +284,7 @@ const submitVote = async (req, res) => {
     res.status(200).json({
       message: 'Vote submitted successfully',
       proposal,
-      addedVote, // Include the newly added vote
+      addedVote,
       limitReached: false,
     });
   } catch (error) {

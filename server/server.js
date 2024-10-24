@@ -1,9 +1,7 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { createServer } = require('node:http');
-const { join } = require('node:path');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
@@ -13,6 +11,7 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
+const socketHandlers = require('./webhooks/socketHandler.js'); // Import socketHandlers
 
 const app = express();
 const server = createServer(app);
@@ -24,12 +23,14 @@ const io = new Server(server, {
   }
 });
 
+// Middleware to enable CORS
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));
 
+// Middleware to parse incoming requests
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
 
@@ -39,20 +40,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root route
 app.get('/', (req, res) => {
   res.send('Welcome to the Consensus Check API!');
 });
 
+// API routes
 app.use('/api/documents', documentRoutes);
-app.use('/api/proposals', proposalRoutes); // Proposal route now has access to io
+app.use('/api/proposals', proposalRoutes); // Proposal routes have access to io
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
-// Connect to MongoDB
+// Initialize socket.io handlers
+socketHandlers(io); // Pass io to socketHandlers to handle all socket logic
+
+// Connect to MongoDB and start the server
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
+    // Start the scheduler
     propCheckExpiredScheduler();
+
+    // Start the server
     server.listen(process.env.PORT || 3000, () => {
       console.log('Connected to db & listening on port', process.env.PORT);
     });
