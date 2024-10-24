@@ -243,8 +243,8 @@ const getSubmittedVotes = async (req, res) => {
 
 
 const submitVote = async (req, res) => {
-  const { id, roomId } = req.params;
-  const { name, opinion, comment } = req.body;
+  const { id } = req.params;
+  const { name, opinion, comment, roomId } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid proposal ID' });
