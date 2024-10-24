@@ -255,7 +255,7 @@ const getSubmittedVotes = async (req, res) => {
 
 
 const submitVote = async (req, res) => {
-  const { id } = req.params;
+  const { id, uniqueUrl } = req.params;
   const { name, opinion, comment } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
