@@ -277,7 +277,7 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
-    const roomId = `room-${uniqueUrl}`; // Example of generating roomId
+    const roomId = `${uniqueUrl}`; // Example of generating roomId
     req.voteEmitter.emit('newVote', roomId, addedVote);
 
     // Add vote to the notification queue
