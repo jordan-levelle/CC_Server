@@ -277,6 +277,8 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
+    voteEmitter.emit('newVote', proposal._id, addedVote); // Emit here
+
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 

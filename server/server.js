@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const EventEmitter = require('events');
+const voteEmitter = new EventEmitter();
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
 require('dotenv').config();
@@ -53,7 +55,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
 // Initialize socket.io handlers
-socketHandlers(io); // Pass io to socketHandlers to handle all socket logic
+socketHandlers(io, voteEmitter); // Pass io to socketHandlers to handle all socket logic
 
 // Connect to MongoDB and start the server
 mongoose.connect(process.env.MONGO_URI)

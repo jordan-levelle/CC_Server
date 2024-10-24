@@ -1,4 +1,5 @@
-module.exports = (io) => {
+// In your socketHandlers.js
+module.exports = (io, voteEmitter) => {
     io.on('connection', (socket) => {
         console.log('New client connected');
 
@@ -7,11 +8,10 @@ module.exports = (io) => {
             console.log(`User joined room: ${roomId}`);
         });
 
-        // Emit 'newVote' instead of 'voteSubmitted'
-        socket.on('voteSubmitted', (roomId, newVote) => {
-            console.log(`Vote submitted in room ${roomId}:`, newVote); // Log the vote being submitted
+        // Listen for vote events from the EventEmitter
+        voteEmitter.on('newVote', (roomId, newVote) => {
+            console.log(`Emitting 'newVote' to room ${roomId}`);
             io.to(roomId).emit('newVote', newVote); // Emit 'newVote' event with the newVote data
-            console.log(`Emitted 'newVote' to room ${roomId}`); // Log emission
         });
 
         socket.on('disconnect', () => {
@@ -20,5 +20,4 @@ module.exports = (io) => {
     });
 };
 
-  
   
