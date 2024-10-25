@@ -277,6 +277,8 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
+    const voteId = proposal.votes[proposal.votes.length - 1]._id;
+
     const roomId = `${uniqueUrl}`; // Example of generating roomId
     req.voteEmitter.emit('newVote', roomId, addedVote);
 
@@ -287,6 +289,7 @@ const submitVote = async (req, res) => {
     res.status(200).json({
       message: 'Vote submitted successfully',
       addedVote,
+      voteId,
       limitReached: false,
     });
   } catch (error) {
