@@ -286,7 +286,6 @@ const submitVote = async (req, res) => {
     // Send success response
     res.status(200).json({
       message: 'Vote submitted successfully',
-      proposal,
       addedVote,
       limitReached: false,
     });
