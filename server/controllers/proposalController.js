@@ -241,9 +241,10 @@ const getSubmittedVotes = async (req, res) => {
 };
 
 
+
 const submitVote = async (req, res) => {
   const { id } = req.params;
-  const { name, opinion, comment, uniqueUrl } = req.body;
+  const { name, opinion, comment, uniqueUrl} = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid proposal ID' });
@@ -276,19 +277,16 @@ const submitVote = async (req, res) => {
     proposal.votes.push(addedVote);
     await proposal.save();
 
-    // Retrieve the ID of the added vote (assuming it's the last vote added)
-    const voteId = proposal.votes[proposal.votes.length - 1]._id;
-
     const roomId = `${uniqueUrl}`; // Example of generating roomId
     req.voteEmitter.emit('newVote', roomId, addedVote);
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
-    // Send success response with the vote ID
+    // Send success response
     res.status(200).json({
       message: 'Vote submitted successfully',
-      voteId, // Return the ID of the added vote
+      addedVote,
       limitReached: false,
     });
   } catch (error) {
@@ -296,6 +294,7 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
