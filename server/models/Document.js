@@ -5,8 +5,8 @@ const documentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  filePath: {
-    type: String,
+  gridFSFileId: { 
+    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   mimeType: {
@@ -25,3 +25,4 @@ const documentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Document', documentSchema);
+
