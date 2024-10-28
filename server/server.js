@@ -3,7 +3,6 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const EventEmitter = require('events');
 const { GridFSBucket } = require('mongodb');
-const multer = require('multer');
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
 require('dotenv').config();
@@ -26,6 +25,8 @@ const io = new Server(server, {
   }
 });
 
+const voteEmitter = new EventEmitter();
+
 // Middleware
 app.use(cors({
   origin: '*',
@@ -38,7 +39,7 @@ app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks')
 // Initialize event emitter and socket.io in routes
 app.use((req, res, next) => {
   req.io = io;
-  req.voteEmitter = new EventEmitter();
+  req.voteEmitter = voteEmitter;
   next();
 });
 
@@ -63,9 +64,6 @@ mongoose.connect(process.env.MONGO_URI)
   })
   .catch((error) => console.error('MongoDB connection error:', error));
 
-// Multer storage setup with GridFS
-const storage = multer.memoryStorage(); // Temporary storage in memory
-
 // Routes
 app.use('/api/documents', documentRoutes); 
 app.use('/api/proposals', proposalRoutes);
@@ -74,7 +72,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
 // Initialize socket.io handlers
-socketHandlers(io);
+socketHandlers(io, voteEmitter);
 
 // Root route
 app.get('/', (req, res) => {
