@@ -68,7 +68,7 @@ const storage = multer.memoryStorage(); // Temporary storage in memory
 const upload = multer({ storage });
 
 // Routes
-app.use('/api/documents', documentRoutes(upload, gfs)); // Pass upload and gfs to routes
+app.use('/api/documents', documentRoutes(upload)); // Pass upload and gfs to routes
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/teams', teamRoutes);

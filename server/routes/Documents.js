@@ -9,11 +9,13 @@ const upload = multer({ storage });
 // Import your controller
 const { documentUpload } = require('../controllers/documentController');
 
-// Set up the route, passing gfs to the documentUpload function
+// Route to upload document
 router.post('/:id', upload.single('file'), (req, res) => {
-  // Here you should pass `gfs` along with the request and response
-  documentUpload(req, res, req.app.get('gfs')); // Assuming you've set gfs on app
+  // Access gfs through req.app
+  const gfs = req.app.get('gfs'); // Get gfs from the app instance
+  documentUpload(req, res, gfs); // Pass gfs to the documentUpload function
 });
 
 module.exports = router;
+
 
