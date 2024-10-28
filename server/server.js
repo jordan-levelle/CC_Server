@@ -51,6 +51,7 @@ mongoose.connect(process.env.MONGO_URI)
     
     conn.once('open', () => {
       gfs = gridFSBucket;
+      app.set('gfs', gfs);
       console.log('GridFSBucket connection established.');
     });
 
