@@ -59,6 +59,13 @@ mongoose.connect(process.env.MONGO_URI)
       console.log('GridFSBucket connection established.');
     });
 
+    // Routes after DB connection is established
+    app.use('/api/documents', documentRoutes);
+    app.use('/api/proposals', proposalRoutes);
+    app.use('/api/user', userRoutes);
+    app.use('/api/teams', teamRoutes);
+    app.use('/api/webhooks', webhookRoutes);
+
     // Start scheduler and server
     propCheckExpiredScheduler();
     server.listen(process.env.PORT || 3000, () => {
@@ -66,13 +73,6 @@ mongoose.connect(process.env.MONGO_URI)
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
-
-// Routes
-app.use('/api/documents', documentRoutes); 
-app.use('/api/proposals', proposalRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/teams', teamRoutes);
-app.use('/api/webhooks', webhookRoutes);
 
 // Initialize socket.io handlers
 socketHandlers(io, voteEmitter);
