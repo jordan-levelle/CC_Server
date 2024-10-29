@@ -28,16 +28,9 @@ const io = new Server(server, {
 const voteEmitter = new EventEmitter();
 
 // Middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-}));
-
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({
-  type: (req) => req.is('application/json') && !req.originalUrl.startsWith('/api/webhooks')
-}));
+app.use(express.json());
 
 // Initialize event emitter and socket.io in routes
 app.use((req, res, next) => {
@@ -48,6 +41,8 @@ app.use((req, res, next) => {
 
 // MongoDB connection and GridFS setup
 let gfs, gridFSBucket;
+console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     const conn = mongoose.connection;
