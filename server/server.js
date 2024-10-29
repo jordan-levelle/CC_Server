@@ -33,8 +33,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));
+
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ type: req => !req.originalUrl.startsWith('/api/webhooks') }));
+app.use(express.json({
+  type: (req) => req.is('application/json') && !req.originalUrl.startsWith('/api/webhooks')
+}));
 
 // Initialize event emitter and socket.io in routes
 app.use((req, res, next) => {
