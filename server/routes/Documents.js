@@ -11,9 +11,9 @@ const { documentUpload } = require('../controllers/documentController');
 
 // Route to upload document
 router.post('/:id', upload.single('file'), (req, res) => {
-  // Access gfs through req.app
-  const gfs = req.app.get('gfs'); // Get gfs from the app instance
-  documentUpload(req, res, gfs); // Pass gfs to the documentUpload function
+  console.log('Request received:', req.params.id, req.file); // Log to check file and ID
+  const gfs = req.app.get('gfs');
+  documentUpload(req, res, gfs);
 });
 
 module.exports = router;
