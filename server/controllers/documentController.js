@@ -1,10 +1,16 @@
 const Document = require('../models/Document');
 const Proposal = require('../models/Proposal');
 
-const documentUpload = async (req, res, gfs) => {
+const documentUpload = async (req, res) => {
   console.log('Received upload request for proposal ID:', req.params.id);
 
   const { id: proposalId } = req.params;
+  const gfs = req.app.get('gfs'); // Retrieve the GridFS instance from app settings
+
+  // Check if GridFS is initialized
+  if (!gfs) {
+    return res.status(503).json({ error: 'File storage system not available' });
+  }
 
   // Check if a file was uploaded
   if (!req.file) {
@@ -13,7 +19,7 @@ const documentUpload = async (req, res, gfs) => {
 
   // Create a readable stream and upload the file to GridFS
   const uploadStream = gfs.openUploadStream(req.file.originalname, {
-    contentType: req.file.mimetype
+    contentType: req.file.mimetype,
   });
 
   uploadStream.end(req.file.buffer); // This uploads the file buffer to GridFS
@@ -39,7 +45,7 @@ const documentUpload = async (req, res, gfs) => {
 
       res.status(200).json({ message: 'File uploaded successfully', document });
     } catch (error) {
-      console.error('File upload failed: ', error);
+      console.error('File upload failed:', error);
       res.status(500).json({ error: 'File upload failed' });
     }
   });
