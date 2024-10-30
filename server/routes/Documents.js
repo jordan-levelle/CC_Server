@@ -11,11 +11,15 @@ const { documentUpload } = require('../controllers/documentController');
 
 // Route to upload document
 router.post('/:id', upload.single('file'), (req, res) => {
-  console.log('Request received:', req.params.id, req.file); // Log to check file and ID
   const gfs = req.app.get('gfs');
+  
+  if (!gfs) {
+    console.error('GridFSBucket is not initialized');
+    return res.status(500).send('GridFSBucket not initialized');
+  }
+
+  console.log('Request received:', req.params.id, req.file); // Log to check file and ID
   documentUpload(req, res, gfs);
 });
 
 module.exports = router;
-
-

@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); 
 const cors = require('cors');
 const mongoose = require('mongoose');
 const EventEmitter = require('events');
@@ -42,12 +42,10 @@ app.use((req, res, next) => {
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     const conn = mongoose.connection;
-   
-    
+
     conn.once('open', () => {
-      let gfs = gridFSBucket;
       const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
-      app.set('gfs', gfs);
+      app.set('gfs', gridFSBucket);
       console.log('GridFSBucket connection established.');
     });
 
@@ -65,7 +63,6 @@ mongoose.connect(process.env.MONGO_URI)
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
-
 
 // Initialize socket.io handlers
 socketHandlers(io, voteEmitter);
