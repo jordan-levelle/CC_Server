@@ -39,21 +39,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
-mongoose.connection.on('connected', () => {
-  console.log('Mongoose is connected to the database.');
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('Mongoose is disconnected from the database.');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
-});
-
-console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
-
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     const conn = mongoose.connection;
