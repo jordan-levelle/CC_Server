@@ -47,19 +47,19 @@ mongoose.connect(process.env.MONGO_URI)
       const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
       app.set('gfs', gridFSBucket);
       console.log('GridFSBucket connection established.');
-    });
 
-    // Routes after DB connection is established
-    app.use('/api/documents', documentRoutes);
-    app.use('/api/proposals', proposalRoutes);
-    app.use('/api/user', userRoutes);
-    app.use('/api/teams', teamRoutes);
-    app.use('/api/webhooks', webhookRoutes);
+      // Routes after GridFSBucket initialization
+      app.use('/api/documents', documentRoutes);
+      app.use('/api/proposals', proposalRoutes);
+      app.use('/api/user', userRoutes);
+      app.use('/api/teams', teamRoutes);
+      app.use('/api/webhooks', webhookRoutes);
 
-    // Start scheduler and server
-    propCheckExpiredScheduler();
-    server.listen(process.env.PORT || 3000, () => {
-      console.log('Connected to db & listening on port', process.env.PORT || 3000);
+      // Start scheduler and server
+      propCheckExpiredScheduler();
+      server.listen(process.env.PORT || 3000, () => {
+        console.log('Connected to db & listening on port', process.env.PORT || 3000);
+      });
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
