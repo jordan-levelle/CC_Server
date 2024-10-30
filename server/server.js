@@ -39,9 +39,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB connection and GridFS setup
-// MongoDB connection and GridFS setup
-let gfs, gridFSBucket;
 
 mongoose.connection.on('connected', () => {
   console.log('Mongoose is connected to the database.');
@@ -60,10 +57,11 @@ console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     const conn = mongoose.connection;
-    const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
+   
     
     conn.once('open', () => {
-      gfs = gridFSBucket;
+      let gfs = gridFSBucket;
+      const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
       app.set('gfs', gfs);
       console.log('GridFSBucket connection established.');
     });
