@@ -1,4 +1,4 @@
-const express = require('express'); 
+const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const EventEmitter = require('events');
@@ -39,30 +39,50 @@ app.use((req, res, next) => {
   next();
 });
 
+// MongoDB connection and GridFS setup
+// MongoDB connection and GridFS setup
+let gfs;
+
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose is connected to the database.');
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose is disconnected from the database.');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     const conn = mongoose.connection;
-
+    const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
+    
     conn.once('open', () => {
-      const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
-      app.set('gfs', gridFSBucket);
+      gfs = gridFSBucket;
+      app.set('gfs', gfs);
       console.log('GridFSBucket connection established.');
+    });
 
-      // Routes after GridFSBucket initialization
-      app.use('/api/documents', documentRoutes);
-      app.use('/api/proposals', proposalRoutes);
-      app.use('/api/user', userRoutes);
-      app.use('/api/teams', teamRoutes);
-      app.use('/api/webhooks', webhookRoutes);
+    // Routes after DB connection is established
+    app.use('/api/documents', documentRoutes);
+    app.use('/api/proposals', proposalRoutes);
+    app.use('/api/user', userRoutes);
+    app.use('/api/teams', teamRoutes);
+    app.use('/api/webhooks', webhookRoutes);
 
-      // Start scheduler and server
-      propCheckExpiredScheduler();
-      server.listen(process.env.PORT || 3000, () => {
-        console.log('Connected to db & listening on port', process.env.PORT || 3000);
-      });
+    // Start scheduler and server
+    propCheckExpiredScheduler();
+    server.listen(process.env.PORT || 3000, () => {
+      console.log('Connected to db & listening on port', process.env.PORT || 3000);
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
+
 
 // Initialize socket.io handlers
 socketHandlers(io, voteEmitter);
