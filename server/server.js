@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const EventEmitter = require('events');
-const { GridFSBucket } = require('mongodb');
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
 require('dotenv').config();
@@ -14,7 +13,7 @@ const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
 const socketHandlers = require('./webhooks/socketHandler.js');
-
+const getGFSBucket = require('./utils/gridfs.js');
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -39,44 +38,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB connection and GridFS setup
-let gfs;
-
-mongoose.connection.on('connected', () => {
-  console.log('Mongoose is connected to the database.');
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('Mongoose is disconnected from the database.');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
-});
-
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    const conn = mongoose.connection;
-    
-    conn.once('open', () => {
-      gfs = new GridFSBucket(conn, { bucketName: 'uploads' });
+    mongoose.connection.once('open', () => {
+      const gfs = getGFSBucket();  // Initialize and get GridFSBucket instance
       app.set('gfs', gfs);
-      console.log('GridFSBucket connection established.');
+      console.log('GridFSBucket connection established and set in app.');
 
-      // Routes after DB connection and GridFS initialization
-      app.use('/api/documents', (req, res, next) => {
-        if (!app.get('gfs')) {
-          return res.status(503).json({ error: 'GridFSBucket not initialized' });
-        }
-        next();
-      }, documentRoutes);
-
-      app.use('/api/proposals', proposalRoutes);
-      app.use('/api/user', userRoutes);
-      app.use('/api/teams', teamRoutes);
-      app.use('/api/webhooks', webhookRoutes);
+      // Initialize only document routes after GridFS is ready
+      app.use('/api/documents', documentRoutes);
 
       // Start scheduler and server
       propCheckExpiredScheduler();
@@ -84,6 +56,12 @@ mongoose.connect(process.env.MONGO_URI)
         console.log('Connected to db & listening on port', process.env.PORT || 3000);
       });
     });
+
+    // Initialize other routes right after DB connection, outside of GridFS
+    app.use('/api/proposals', proposalRoutes);
+    app.use('/api/user', userRoutes);
+    app.use('/api/teams', teamRoutes);
+    app.use('/api/webhooks', webhookRoutes);
   })
   .catch((error) => console.error('MongoDB connection error:', error));
 
