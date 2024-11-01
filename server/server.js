@@ -60,7 +60,7 @@ console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     const conn = mongoose.connection;
-    const gridFSBucket = new GridFSBucket(conn.db, { bucketName: 'uploads' });
+    const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'uploads' });
     
     conn.once('open', () => {
       gfs = gridFSBucket;
