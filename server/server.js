@@ -40,8 +40,7 @@ app.use((req, res, next) => {
 });
 
 // MongoDB connection and GridFS setup
-// MongoDB connection and GridFS setup
-let gfs;
+let gfs;  // Global variable for GridFS stream
 
 mongoose.connection.on('connected', () => {
   console.log('Mongoose is connected to the database.');
@@ -57,10 +56,11 @@ mongoose.connection.on('error', (err) => {
 
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
+    // Establish a GridFSBucket instance once the database connection opens
     const conn = mongoose.connection;
-    const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'uploads' });
+    const gridFSBucket = new GridFSBucket(conn, { bucketName: 'uploads' });
     
     conn.once('open', () => {
       gfs = gridFSBucket;
@@ -82,7 +82,6 @@ mongoose.connect(process.env.MONGO_URI)
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
-
 
 // Initialize socket.io handlers
 socketHandlers(io, voteEmitter);
