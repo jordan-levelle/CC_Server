@@ -16,6 +16,7 @@ const socketHandlers = require('./webhooks/socketHandler.js');
 const getGFSBucket = require('./utils/gridfs.js');
 const app = express();
 const server = createServer(app);
+
 const io = new Server(server, {
   cors: {
     origin: '*',
@@ -40,7 +41,7 @@ app.use((req, res, next) => {
 
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     mongoose.connection.once('open', () => {
       const gfs = getGFSBucket();  // Initialize and get GridFSBucket instance
