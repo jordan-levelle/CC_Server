@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 });
 
 // MongoDB connection and GridFS setup
-let gfs;  // Global variable for GridFS stream
+let gfs;
 
 mongoose.connection.on('connected', () => {
   console.log('Mongoose is connected to the database.');
@@ -58,27 +58,31 @@ console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    // Establish a GridFSBucket instance once the database connection opens
     const conn = mongoose.connection;
-    const gridFSBucket = new GridFSBucket(conn, { bucketName: 'uploads' });
     
     conn.once('open', () => {
-      gfs = gridFSBucket;
+      gfs = new GridFSBucket(conn, { bucketName: 'uploads' });
       app.set('gfs', gfs);
       console.log('GridFSBucket connection established.');
-    });
 
-    // Routes after DB connection is established
-    app.use('/api/documents', documentRoutes);
-    app.use('/api/proposals', proposalRoutes);
-    app.use('/api/user', userRoutes);
-    app.use('/api/teams', teamRoutes);
-    app.use('/api/webhooks', webhookRoutes);
+      // Routes after DB connection and GridFS initialization
+      app.use('/api/documents', (req, res, next) => {
+        if (!app.get('gfs')) {
+          return res.status(503).json({ error: 'GridFSBucket not initialized' });
+        }
+        next();
+      }, documentRoutes);
 
-    // Start scheduler and server
-    propCheckExpiredScheduler();
-    server.listen(process.env.PORT || 3000, () => {
-      console.log('Connected to db & listening on port', process.env.PORT || 3000);
+      app.use('/api/proposals', proposalRoutes);
+      app.use('/api/user', userRoutes);
+      app.use('/api/teams', teamRoutes);
+      app.use('/api/webhooks', webhookRoutes);
+
+      // Start scheduler and server
+      propCheckExpiredScheduler();
+      server.listen(process.env.PORT || 3000, () => {
+        console.log('Connected to db & listening on port', process.env.PORT || 3000);
+      });
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));

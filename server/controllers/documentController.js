@@ -1,44 +1,34 @@
-const Document = require('../models/Document');
-const Proposal = require('../models/Proposal');
-
 const documentUpload = async (req, res) => {
   console.log('Received upload request for proposal ID:', req.params.id);
+  const gfs = req.app.get('gfs'); 
 
-  const { id: proposalId } = req.params;
-  const gfs = req.app.get('gfs'); // Retrieve the GridFS instance from app settings
-
-  // Check if GridFS is initialized
   if (!gfs) {
+    console.error('GridFSBucket not available in documentUpload');
     return res.status(503).json({ error: 'File storage system not available' });
   }
 
-  // Check if a file was uploaded
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  // Create a readable stream and upload the file to GridFS
   const uploadStream = gfs.openUploadStream(req.file.originalname, {
     contentType: req.file.mimetype,
   });
 
-  uploadStream.end(req.file.buffer); // This uploads the file buffer to GridFS
+  uploadStream.end(req.file.buffer);
 
   uploadStream.on('finish', async (file) => {
     try {
       const documentData = {
         fileName: req.file.originalname,
-        filePath: file._id, // Store the file's ObjectId
+        filePath: file._id,
         mimeType: req.file.mimetype,
-        proposalId,
+        proposalId: req.params.id,
       };
 
       const document = await Document.create(documentData);
-      console.log('Document created successfully:', document);
-
-      // Add reference to the document in the associated proposal
       await Proposal.findByIdAndUpdate(
-        proposalId,
+        req.params.id,
         { $push: { documents: document._id } },
         { new: true }
       );
@@ -54,8 +44,4 @@ const documentUpload = async (req, res) => {
     console.error('Error uploading to GridFS:', error);
     res.status(500).json({ error: 'Error uploading to GridFS' });
   });
-};
-
-module.exports = {
-  documentUpload,
 };
