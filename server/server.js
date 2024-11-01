@@ -50,12 +50,6 @@ mongoose.connect(process.env.MONGO_URI)
 
       // Initialize only document routes after GridFS is ready
       app.use('/api/documents', documentRoutes);
-
-      // Start scheduler and server
-      propCheckExpiredScheduler();
-      server.listen(process.env.PORT || 3000, () => {
-        console.log('Connected to db & listening on port', process.env.PORT || 3000);
-      });
     });
 
     // Initialize other routes right after DB connection, outside of GridFS
@@ -63,6 +57,12 @@ mongoose.connect(process.env.MONGO_URI)
     app.use('/api/user', userRoutes);
     app.use('/api/teams', teamRoutes);
     app.use('/api/webhooks', webhookRoutes);
+
+          // Start scheduler and server
+          propCheckExpiredScheduler();
+          server.listen(process.env.PORT || 3000, () => {
+            console.log('Connected to db & listening on port', process.env.PORT || 3000);
+          });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
 
