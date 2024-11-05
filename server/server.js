@@ -43,21 +43,17 @@ console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-    mongoose.connection.once('open', () => {
-      const gfs = initGFSBucket();  // Initialize GridFS when connection opens
+    const gfs = initGFSBucket();  // Initialize GridFSBucket
 
-      if (gfs) {
-        app.set('gfs', gfs);  // Store GridFS instance in app
-        console.log('GridFSBucket connection established and set in app.');
-      } else {
-        console.error('Failed to initialize GridFSBucket');
-      }
+    if (gfs) {
+      app.set('gfs', gfs);  // Set gfs in app
+      console.log('GridFSBucket connection established and set in app.');
+    } else {
+      console.error('Failed to initialize GridFSBucket');
+    }
 
-      // Initialize document routes after GridFS is ready
-      app.use('/api/documents', documentRoutes);
-    });
-
-    // Initialize other routes right after DB connection
+    // Register routes
+    app.use('/api/documents', documentRoutes);
     app.use('/api/proposals', proposalRoutes);
     app.use('/api/user', userRoutes);
     app.use('/api/teams', teamRoutes);
@@ -70,6 +66,7 @@ mongoose.connect(process.env.MONGO_URI)
     });
   })
   .catch((error) => console.error('MongoDB connection error:', error));
+
 
 // Initialize socket.io handlers
 socketHandlers(io, voteEmitter);
