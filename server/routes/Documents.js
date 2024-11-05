@@ -7,7 +7,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Import your controller
-const documentUpload = require('../controllers/documentController');
+const { documentUpload } = require('../controllers/documentController');
 
 // Route to upload document
 router.post('/:id', upload.single('file'), (req, res) => {

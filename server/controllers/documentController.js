@@ -1,7 +1,4 @@
 
-
-
-
 const documentUpload = async (req, res) => {
   console.log('Received upload request for proposal ID:', req.params.id);
   const gfs = req.app.get('gfs'); 
@@ -54,3 +51,4 @@ const documentUpload = async (req, res) => {
 module.exports = {
   documentUpload
 };
+
