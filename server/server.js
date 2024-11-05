@@ -7,13 +7,14 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
-const documentRoutes = require('./routes/Documents.js');
+const documentRoutes = require('./routes/Documents');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
 const socketHandlers = require('./webhooks/socketHandler.js');
-const { getGFSInstance } = require('./utils/gridfs.js');  // Adjusted import
+const { initGFSBucket, getGFSInstance } = require('./utils/gridfs.js');  // Import init function and getter
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -35,7 +36,6 @@ app.use(express.json());
 app.use((req, res, next) => {
   req.io = io;
   req.voteEmitter = voteEmitter;
-  req.gfs = app.get('gfs');  // Attach gfs from app settings to req object
   next();
 });
 
@@ -44,7 +44,8 @@ console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     mongoose.connection.once('open', () => {
-      const gfs = getGFSInstance();  // Get the initialized GridFS instance
+      const gfs = initGFSBucket();  // Initialize GridFS when connection opens
+
       if (gfs) {
         app.set('gfs', gfs);  // Store GridFS instance in app
         console.log('GridFSBucket connection established and set in app.');
