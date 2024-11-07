@@ -1,4 +1,6 @@
 // In socketHandlers.js
+
+/* 
 module.exports = (io, voteEmitter) => {
     io.on('connection', (socket) => {
         console.log('New client connected');
@@ -19,6 +21,9 @@ module.exports = (io, voteEmitter) => {
         io.to(roomId).emit('newVote', newVote);
     });
 };
+
+*/
+
 
 
   

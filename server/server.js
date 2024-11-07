@@ -13,17 +13,17 @@ const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
 const socketHandlers = require('./webhooks/socketHandler.js');
-const { initGFSBucket, getGFSInstance } = require('./utils/gridfs.js');  // Import init function and getter
+const { initGFSBucket } = require('./utils/gridfs.js');  // Import init function and getter
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
-  }
-});
+// const io = new Server(server, {
+//   cors: {
+//     origin: '*',
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     credentials: true,
+//   }
+// });
 
 const voteEmitter = new EventEmitter();
 
@@ -34,8 +34,8 @@ app.use(express.json());
 
 // Attach io and voteEmitter to request
 app.use((req, res, next) => {
-  req.io = io;
-  req.voteEmitter = voteEmitter;
+  // req.io = io;
+  // req.voteEmitter = voteEmitter;
   next();
 });
 
@@ -69,7 +69,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 // Initialize socket.io handlers
-socketHandlers(io, voteEmitter);
+// socketHandlers(io, voteEmitter);
 
 // Root route
 app.get('/', (req, res) => {
