@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const EventEmitter = require('events');
+// const EventEmitter = require('events');
 const { createServer } = require('node:http');
-const { Server } = require('socket.io');
+// const { Server } = require('socket.io');
 require('dotenv').config();
 
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
@@ -12,7 +12,7 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
-const socketHandlers = require('./webhooks/socketHandler.js');
+// const socketHandlers = require('./webhooks/socketHandler.js');
 const { initGFSBucket } = require('./utils/gridfs.js');  // Import init function and getter
 
 const app = express();
@@ -25,7 +25,7 @@ const server = createServer(app);
 //   }
 // });
 
-const voteEmitter = new EventEmitter();
+// const voteEmitter = new EventEmitter();
 
 // Middleware
 app.use(cors());
