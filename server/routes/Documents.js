@@ -12,9 +12,6 @@ const { documentUpload } = require('../controllers/documentController');
 // Route to upload document
 router.post('/:id', upload.single('file'), (req, res) => {
   const gfs = req.app.get('gfs');
-
-
-
   documentUpload(req, res, gfs);
 });
 
