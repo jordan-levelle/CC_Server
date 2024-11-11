@@ -13,13 +13,7 @@ const { documentUpload } = require('../controllers/documentController');
 router.post('/:id', upload.single('file'), (req, res) => {
   const gfs = req.app.get('gfs');
 
-  if (!gfs) {
-    return res.status(500).send('GridFSBucket not initialized');
-  }
 
-  if (!req.file) {
-    return res.status(400).send('No file provided');
-  }
 
   documentUpload(req, res, gfs);
 });
