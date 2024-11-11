@@ -1,9 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-// const EventEmitter = require('events');
 const { createServer } = require('node:http');
-// const { Server } = require('socket.io');
 require('dotenv').config();
 
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
@@ -12,30 +10,17 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
-// const socketHandlers = require('./webhooks/socketHandler.js');
 const { initGFSBucket } = require('./utils/gridfs.js');  // Import init function and getter
 
 const app = express();
 const server = createServer(app);
-// const io = new Server(server, {
-//   cors: {
-//     origin: '*',
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//     credentials: true,
-//   }
-// });
-
-// const voteEmitter = new EventEmitter();
 
 // Middleware
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Attach io and voteEmitter to request
 app.use((req, res, next) => {
-  // req.io = io;
-  // req.voteEmitter = voteEmitter;
   next();
 });
 
@@ -67,12 +52,11 @@ mongoose.connect(process.env.MONGO_URI)
   })
   .catch((error) => console.error('MongoDB connection error:', error));
 
-// Initialize socket.io handlers
-// socketHandlers(io, voteEmitter);
-
 // Root route
 app.get('/', (req, res) => {
   res.send('Welcome to the Consensus Check API!');
 });
 
 module.exports = server;
+
+

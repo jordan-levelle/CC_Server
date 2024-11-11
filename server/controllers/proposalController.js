@@ -244,7 +244,7 @@ const getSubmittedVotes = async (req, res) => {
 
 const submitVote = async (req, res) => {
   const { id } = req.params;
-  const { name, opinion, comment, uniqueUrl} = req.body;
+  const { name, opinion, comment} = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid proposal ID' });
@@ -278,9 +278,6 @@ const submitVote = async (req, res) => {
     await proposal.save();
 
     const voteId = proposal.votes[proposal.votes.length - 1]._id;
-
-    // const roomId = `${uniqueUrl}`; // Example of generating roomId
-    // req.voteEmitter.emit('newVote', roomId, addedVote);
 
     // Add vote to the notification queue
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
