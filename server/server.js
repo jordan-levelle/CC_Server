@@ -15,12 +15,23 @@ const { initGFSBucket } = require('./utils/gridfs.js');  // Import init function
 const app = express();
 const server = createServer(app);
 
+// Set up CORS with specific options
+const corsOptions = {
+  origin: 'http://your-frontend-domain.com', // Replace with the actual frontend domain
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Add methods as needed
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions)); // Apply CORS options
+
 // Middleware
-app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Log incoming requests to verify headers and methods
 app.use((req, res, next) => {
+  console.log('Received request:', req.method, req.headers);
   next();
 });
 
