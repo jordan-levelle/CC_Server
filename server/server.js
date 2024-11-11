@@ -10,26 +10,25 @@ const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
 const webhookRoutes = require('./webhooks/webhookHandler');
-const { initGFSBucket } = require('./utils/gridfs.js');  // Import init function and getter
+const { initGFSBucket } = require('./utils/gridfs.js');  
 
 const app = express();
 const server = createServer(app);
 
-// Set up CORS with specific options
 const corsOptions = {
-  origin: 'http://your-frontend-domain.com', // Replace with the actual frontend domain
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Add methods as needed
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true,
 };
 
-app.use(cors(corsOptions)); // Apply CORS options
+app.use(cors(corsOptions)); 
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Log incoming requests to verify headers and methods
+
 app.use((req, res, next) => {
   console.log('Received request:', req.method, req.headers);
   next();
