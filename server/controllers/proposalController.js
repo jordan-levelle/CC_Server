@@ -227,10 +227,7 @@ const getSubmittedVotes = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const proposal = await Proposal.findById(id).populate({
-      path: 'votes',
-      options: { sort: { createdAt: -1 } } // Sort votes by 'createdAt' descending
-    });
+    const proposal = await Proposal.findById(id);
 
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
@@ -242,7 +239,6 @@ const getSubmittedVotes = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 
 
