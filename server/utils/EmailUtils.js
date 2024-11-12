@@ -5,7 +5,7 @@ const { htmlToText } = require('html-to-text');
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
-  secure: process.env.EMAIL_PORT == 465, // true for port 465, false for other ports
+  secure: process.env.EMAIL_PORT == 465, 
   auth: {
     user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD,
@@ -16,16 +16,26 @@ const voteNotificationQueue = {};
 
 const addVoteToQueue = (proposalId, proposal, vote) => {
   if (!voteNotificationQueue[proposalId]) {
-    voteNotificationQueue[proposalId] = [];
+    voteNotificationQueue[proposalId] = { votes: [], timer: null };
   }
 
-  // Push vote to the queue for this proposal
-  voteNotificationQueue[proposalId].push(vote);
+  // Check if a previous vote with the same ID exists in the queue
+  const existingVoteIndex = voteNotificationQueue[proposalId].votes.findIndex(
+    v => v.id === vote.id // Use `id` to uniquely identify the vote
+  );
 
-  // Set a timer if not already set
+  if (existingVoteIndex > -1) {
+    // Update the existing vote with the new data
+    voteNotificationQueue[proposalId].votes[existingVoteIndex] = vote;
+  } else {
+    // Otherwise, push a new vote to the queue
+    voteNotificationQueue[proposalId].votes.push(vote);
+  }
+
+  // Set a timer to process the queued votes if it hasn't been set yet
   if (!voteNotificationQueue[proposalId].timer) {
     voteNotificationQueue[proposalId].timer = setTimeout(async () => {
-      const votes = voteNotificationQueue[proposalId];
+      const votes = voteNotificationQueue[proposalId].votes;
       delete voteNotificationQueue[proposalId]; // Clear the queue after sending the email
 
       if (proposal.email) {
@@ -37,6 +47,7 @@ const addVoteToQueue = (proposalId, proposal, vote) => {
     }, 120000); // 2-minute delay
   }
 };
+
 
 
 const generateVoteEmailContent = ({ proposal, votes}) => {
