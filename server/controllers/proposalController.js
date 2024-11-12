@@ -277,6 +277,8 @@ const submitVote = async (req, res) => {
       { new: true } // Return the updated document after the push
     );
 
+    addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
+
     // Send a success response with added vote details
     res.status(200).json({
       message: 'Vote submitted successfully',
