@@ -16,26 +16,16 @@ const voteNotificationQueue = {};
 
 const addVoteToQueue = (proposalId, proposal, vote) => {
   if (!voteNotificationQueue[proposalId]) {
-    voteNotificationQueue[proposalId] = { votes: [], timer: null };
+    voteNotificationQueue[proposalId] = [];
   }
 
-  // Check if a previous vote with the same ID exists in the queue
-  const existingVoteIndex = voteNotificationQueue[proposalId].votes.findIndex(
-    v => v.id === vote.id // Use `id` to uniquely identify the vote
-  );
+  // Push vote to the queue for this proposal
+  voteNotificationQueue[proposalId].push(vote);
 
-  if (existingVoteIndex > -1) {
-    // Update the existing vote with the new data
-    voteNotificationQueue[proposalId].votes[existingVoteIndex] = vote;
-  } else {
-    // Otherwise, push a new vote to the queue
-    voteNotificationQueue[proposalId].votes.push(vote);
-  }
-
-  // Set a timer to process the queued votes if it hasn't been set yet
+  // Set a timer 
   if (!voteNotificationQueue[proposalId].timer) {
     voteNotificationQueue[proposalId].timer = setTimeout(async () => {
-      const votes = voteNotificationQueue[proposalId].votes;
+      const votes = voteNotificationQueue[proposalId];
       delete voteNotificationQueue[proposalId]; // Clear the queue after sending the email
 
       if (proposal.email) {
@@ -44,10 +34,9 @@ const addVoteToQueue = (proposalId, proposal, vote) => {
         // Send email with the queued votes
         await sendEmail(proposal.email, emailSubject, emailContent);
       }
-    }, 120000); // 2-minute delay
+    }, 60000); // 2-minute delay
   }
 };
-
 
 
 const generateVoteEmailContent = ({ proposal, votes}) => {
