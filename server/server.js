@@ -16,14 +16,15 @@ const app = express();
 const server = createServer(app);
 
 const corsOptions = {
-  origin: 'http://localhost:3000', 
+  origin: ['http://localhost:3000', 'https://dev.consensuscheck.com'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true,
 };
 
 app.use(cors(corsOptions)); 
-app.options('http://localhost:3000', cors(corsOptions));
+app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
+
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
