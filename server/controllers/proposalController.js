@@ -244,28 +244,25 @@ const getSubmittedVotes = async (req, res) => {
 
 const submitVote = async (req, res) => {
   const { id } = req.params;
-  const { name, opinion, comment} = req.body;
+  const { name, opinion, comment } = req.body;
 
+  // Check for a valid proposal ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid proposal ID' });
   }
 
   try {
-    // Find the proposal
-    const proposal = await Proposal.findById(id);
+    // Fetch the proposal and populate the owner's subscription status
+    const proposal = await Proposal.findById(id).populate('user_id', 'subscriptionStatus');
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Find the owner of the proposal
-    const owner = await User.findById(proposal.user_id);
-
-    // Check if the owner is not subscribed and if there are already 15 votes
-    if (owner && !owner.subscriptionStatus && proposal.votes.length >= 15) {
-      return res.status(200).json({
+    // Check if the owner's subscription allows more votes
+    const owner = proposal.user_id;
+    if (!owner.subscriptionStatus && proposal.votes.length >= 15) {
+      return res.status(403).json({
         message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
-        proposal,
-        addedVote: null,
         limitReached: true,
       });
     }
@@ -273,20 +270,17 @@ const submitVote = async (req, res) => {
     // Define the new vote
     const addedVote = { name, opinion, comment };
 
-    // Add the new vote to the proposal
-    proposal.votes.push(addedVote);
-    await proposal.save();
+    // Add the new vote to the beginning of the array
+    await Proposal.findByIdAndUpdate(
+      id,
+      { $push: { votes: { $each: [addedVote], $position: 0 } } },
+      { new: true } // Return the updated document after the push
+    );
 
-    const voteId = proposal.votes[proposal.votes.length - 1]._id;
-
-    // Add vote to the notification queue
-    addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
-
-    // Send success response
+    // Send a success response with added vote details
     res.status(200).json({
       message: 'Vote submitted successfully',
       addedVote,
-      voteId,
       limitReached: false,
     });
   } catch (error) {
@@ -294,7 +288,6 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 
 
