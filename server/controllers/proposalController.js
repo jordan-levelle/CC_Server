@@ -241,6 +241,7 @@ const getSubmittedVotes = async (req, res) => {
 };
 
 
+// Submit vote logic
 const submitVote = async (req, res) => {
   const { id } = req.params;
   const { name, opinion, comment } = req.body;
@@ -283,6 +284,10 @@ const submitVote = async (req, res) => {
         { $push: { votes: { $each: [addedVote], $position: memberIndex } } },
         { new: true }
       );
+      
+      // Verify the order of the votes
+      const updatedProposal = await Proposal.findById(id);
+      console.log('Updated proposal votes:', updatedProposal.votes);
     } else {
       // Non-team-related proposal, use the existing logic to add to the beginning
       console.log(`Inserting vote for member ${name} at the beginning`);
