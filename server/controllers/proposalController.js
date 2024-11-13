@@ -241,7 +241,6 @@ const getSubmittedVotes = async (req, res) => {
 };
 
 
-
 const submitVote = async (req, res) => {
   const { id } = req.params;
   const { name, opinion, comment } = req.body;
@@ -252,31 +251,47 @@ const submitVote = async (req, res) => {
   }
 
   try {
-    // Fetch the proposal and populate the owner's subscription status
-    const proposal = await Proposal.findById(id).populate('user_id', 'subscriptionStatus');
+    // Fetch the proposal and check if it's associated with a team
+    const proposal = await Proposal.findById(id)
+      .populate('user_id', 'subscriptionStatus')
+      .populate('teamId'); // Populate the teamId to access the team details
+
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Check if the owner's subscription allows more votes
-    const owner = proposal.user_id;
-    if (!owner.subscriptionStatus && proposal.votes.length >= 15) {
-      return res.status(403).json({
-        message: 'Limit of 15 votes reached. Upgrade subscription for unlimited votes.',
-        limitReached: true,
-      });
-    }
+    // Determine if the proposal is team-related
+    const isTeamRelated = proposal.teamId && Array.isArray(proposal.teamId.members);
 
     // Define the new vote
     const addedVote = { name, opinion, comment };
 
-    // Add the new vote to the beginning of the array
-    await Proposal.findByIdAndUpdate(
-      id,
-      { $push: { votes: { $each: [addedVote], $position: 0 } } },
-      { new: true } // Return the updated document after the push
-    );
+    if (isTeamRelated) {
+      // If the proposal is team-related, maintain the order of team members
+      const teamMembers = proposal.teamId.members.map(member => member.memberName);
 
+      // Find the correct index for the new vote based on team member order
+      const memberIndex = teamMembers.indexOf(name);
+      if (memberIndex === -1) {
+        return res.status(400).json({ error: 'Member not found in the team' });
+      }
+
+      // Insert the vote at the correct position based on team member order
+      await Proposal.findByIdAndUpdate(
+        id,
+        { $push: { votes: { $each: [addedVote], $position: memberIndex } } },
+        { new: true }
+      );
+    } else {
+      // Non-team-related proposal, use the existing logic to add to the beginning
+      await Proposal.findByIdAndUpdate(
+        id,
+        { $push: { votes: { $each: [addedVote], $position: 0 } } },
+        { new: true }
+      );
+    }
+
+    // Optionally log or handle submission events
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
     // Send a success response with added vote details
@@ -290,7 +305,6 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 
 
