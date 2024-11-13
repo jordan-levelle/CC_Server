@@ -5,9 +5,12 @@ const createTeam = async (req, res) => {
   const { teamName, members } = req.body;
   const userId = req.user._id;
 
+  // Sort members alphabetically by memberName before saving
+  const sortedMembers = members.sort((a, b) => a.memberName.localeCompare(b.memberName));
+
   const team = new Team({
     teamName,
-    members,
+    members: sortedMembers, // Use the sorted members array
     createdBy: userId
   });
 
@@ -24,6 +27,7 @@ const createTeam = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error });
   }
 };
+
 
 
 const deleteTeam = async (req, res) => {
