@@ -277,6 +277,7 @@ const submitVote = async (req, res) => {
       }
 
       // Insert the vote at the correct position based on team member order
+      console.log(`Inserting vote for member ${name} at index ${memberIndex}`);
       await Proposal.findByIdAndUpdate(
         id,
         { $push: { votes: { $each: [addedVote], $position: memberIndex } } },
@@ -284,6 +285,7 @@ const submitVote = async (req, res) => {
       );
     } else {
       // Non-team-related proposal, use the existing logic to add to the beginning
+      console.log(`Inserting vote for member ${name} at the beginning`);
       await Proposal.findByIdAndUpdate(
         id,
         { $push: { votes: { $each: [addedVote], $position: 0 } } },
@@ -305,6 +307,7 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 
