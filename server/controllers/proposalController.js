@@ -77,7 +77,6 @@ const createProposal = async (req, res) => {
       user_id: userId,
       uniqueUrl,
       teamId: teamId || null, 
-      teamName: teamName || null, 
     };
 
     const proposal = await Proposal.create(proposalData);
