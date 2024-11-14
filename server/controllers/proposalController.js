@@ -244,8 +244,9 @@ const getSubmittedVotes = async (req, res) => {
 
 // Submit vote logic
 const submitVote = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params;  // `id` is the proposal ID
   const { name, opinion, comment } = req.body;
+  const userId = req.user._id;  // Get the user ID from the authenticated request
 
   // Check for a valid proposal ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -265,32 +266,35 @@ const submitVote = async (req, res) => {
     // Determine if the proposal is team-related
     const isTeamRelated = proposal.teamId && Array.isArray(proposal.teamId.members);
 
-    // Define the new vote
-    const addedVote = { name, opinion, comment };
+    // Define the new vote with a generated ObjectId
+    const newVoteId = new mongoose.Types.ObjectId(); // Generate a new ObjectId for the vote
+    const addedVote = {
+      _id: newVoteId, // Include the generated ObjectId
+      name,
+      opinion,
+      comment,
+      userId,
+      createdAt: new Date(),
+    };
 
+    // Save the vote in the correct position
     if (isTeamRelated) {
-      // If the proposal is team-related, maintain the order of team members
       const teamMembers = proposal.teamId.members.map(member => member.memberName);
-
-      // Find the correct index for the new vote based on team member order
       const memberIndex = teamMembers.indexOf(name);
+
       if (memberIndex === -1) {
         return res.status(400).json({ error: 'Member not found in the team' });
       }
 
-      // Insert the vote at the correct position based on team member order
+      // Insert the vote at the correct position
       console.log(`Inserting vote for member ${name} at index ${memberIndex}`);
       await Proposal.findByIdAndUpdate(
         id,
         { $push: { votes: { $each: [addedVote], $position: memberIndex } } },
         { new: true }
       );
-      
-      // Verify the order of the votes
-      const updatedProposal = await Proposal.findById(id);
-      console.log('Updated proposal votes:', updatedProposal.votes);
     } else {
-      // Non-team-related proposal, use the existing logic to add to the beginning
+      // Non-team-related proposal, add the vote at the beginning
       console.log(`Inserting vote for member ${name} at the beginning`);
       await Proposal.findByIdAndUpdate(
         id,
@@ -299,12 +303,35 @@ const submitVote = async (req, res) => {
       );
     }
 
+    // Now, update the user's participatedProposals
+    const user = await User.findById(userId);
+
+    if (!user) {
+      console.log('User not found:', userId);
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Find existing participation for the proposal
+    const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === id);
+
+    if (existingParticipation) {
+      // Update the voteId if the user already participated
+      existingParticipation.voteId = newVoteId;
+    } else {
+      // Add new participation if not found
+      user.participatedProposals.push({ proposalId: id, voteId: newVoteId });
+    }
+
+    // Save the updated user document
+    await user.save();
+    console.log('User updated successfully with new participated proposals.');
+
     // Optionally log or handle submission events
     addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
 
     // Send a success response with added vote details
     res.status(200).json({
-      message: 'Vote submitted successfully',
+      message: 'Vote submitted and participation updated successfully',
       addedVote,
       limitReached: false,
     });
@@ -313,8 +340,6 @@ const submitVote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
 
 
 

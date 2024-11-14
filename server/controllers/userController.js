@@ -320,11 +320,7 @@ const getParticipatedProposals = async (req, res) => {
       .filter(participation => participation.proposalId) // Ensure the proposal exists
       .map(participation => {
         const { _id, title, uniqueUrl, votes, isArchived } = participation.proposalId; // Extract isArchived here
-        const vote = votes?.find(v => {
-          console.log('Matching voteId:', participation.voteId, 'with vote _id:', v._id);
-          return v._id.equals(participation.voteId);
-        });
-        
+        const vote = votes?.find(v => v._id.equals(participation.voteId));
 
         return { 
           _id, 
