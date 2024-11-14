@@ -11,7 +11,7 @@ const userSchema = new Schema({
   proposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal' }],
   participatedProposals: [{
     proposalId: { type: Schema.Types.ObjectId, ref: 'Proposal' },
-    voteId: { type: Schema.Types.ObjectId } // Reference to the vote within the Proposal
+    voteId: { type: Schema.Types.ObjectId } 
   }],
   archivedProposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal' }], // New field for archived proposals
   archivedParticipatedProposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal'}],
