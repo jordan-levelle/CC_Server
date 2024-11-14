@@ -15,9 +15,15 @@ const { initGFSBucket } = require('./utils/gridfs.js');
 const app = express();
 const server = createServer(app);
 
+const corsOptions = {
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+};
 
 
-app.use(cors()); 
+app.use(cors(corsOptions)); 
+app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
 
 
 // Middleware
