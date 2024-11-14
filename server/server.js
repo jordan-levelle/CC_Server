@@ -16,7 +16,7 @@ const app = express();
 const server = createServer(app);
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://dev.consensuscheck.com'], 
+  origin: ['*'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true,
