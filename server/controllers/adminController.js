@@ -25,6 +25,7 @@ const getAllUsersAdmin = async (req, res) => {
       const userData = users.map(user => ({
         _id: user._id,
         email: user.email,
+        proposals: user.proposals,
         proposalCount: user.proposals ? user.proposals.length : 0,
         subscriptionStatus: user.subscriptionStatus,
       }));
