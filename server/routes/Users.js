@@ -10,7 +10,6 @@ const {
   makeSubscriptionPayment,
   cancelSubscription,
   getParticipatedProposals,
-  setParticipatedProposal,
   removeParticipatedProposal,
   archiveProposal,
   archiveParticipatedProposal,
@@ -37,7 +36,6 @@ router.post('/makePayment', requireAuth, makeSubscriptionPayment);
 router.post('/cancel-subscription', requireAuth, cancelSubscription);
 
 // Participated proposals routes
-router.post('/setParticipatedProposal', requireAuth, setParticipatedProposal);
 router.get('/getParticipatedProposals', requireAuth, getParticipatedProposals);
 router.delete('/removeParticipatedProposal/:id', requireAuth, removeParticipatedProposal);
 

@@ -9,6 +9,7 @@ const documentRoutes = require('./routes/Documents');
 const proposalRoutes = require('./routes/Proposals');
 const userRoutes = require('./routes/Users');
 const teamRoutes = require('./routes/Teams.js');
+const adminRoutes = require('./routes/Admin.js')
 const webhookRoutes = require('./webhooks/webhookHandler');
 const { initGFSBucket } = require('./utils/gridfs.js');  
 
@@ -54,6 +55,7 @@ mongoose.connect(process.env.MONGO_URI)
     app.use('/api/user', userRoutes);
     app.use('/api/teams', teamRoutes);
     app.use('/api/webhooks', webhookRoutes);
+    app.use('/api/admin', adminRoutes);
 
     // Start scheduler and server
     propCheckExpiredScheduler();

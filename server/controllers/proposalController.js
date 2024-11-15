@@ -459,3 +459,137 @@ module.exports = {
   deleteVote,
   deleteProposalsByUser,
 };
+
+
+
+
+
+
+
+/* ****swap to prevent owner proposal add to partprop 
+const submitVote = async (req, res) => {
+  const { id } = req.params;  
+  const { name, opinion, comment } = req.body;
+  const userId = req.user?._id;  // Use optional chaining in case req.user is undefined
+
+  console.log('Starting vote submission process...');
+  console.log('Proposal ID:', id);
+  console.log('Vote Details:', { name, opinion, comment });
+  console.log('User ID:', userId);
+
+  // Check for a valid proposal ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    console.error('Invalid proposal ID:', id);
+    return res.status(400).json({ error: 'Invalid proposal ID' });
+  }
+
+  try {
+    console.log('Fetching proposal by ID...');
+    // Fetch the proposal and check if it's associated with a team
+    const proposal = await Proposal.findById(id)
+      .populate('user_id', 'subscriptionStatus')
+      .populate('teamId'); // Populate the teamId to access the team details
+
+    if (!proposal) {
+      console.error('Proposal not found for ID:', id);
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    console.log('Proposal fetched successfully:', proposal);
+    // Determine if the proposal is team-related
+    const isTeamRelated = proposal.teamId && Array.isArray(proposal.teamId.members);
+    console.log('Is proposal team-related?', isTeamRelated);
+
+    // Check if the current user is the owner/creator of the proposal
+    const isOwner = proposal.user_id.toString() === userId;
+    console.log('Is user the owner of the proposal?', isOwner);
+
+    // Define the new vote with a generated ObjectId
+    const newVoteId = new mongoose.Types.ObjectId(); // Generate a new ObjectId for the vote
+    const addedVote = {
+      _id: newVoteId, // Include the generated ObjectId
+      name,
+      opinion,
+      comment,
+      userId,
+      createdAt: new Date(),
+    };
+    console.log('New vote to be added:', addedVote);
+
+    // Save the vote in the correct position
+    if (isTeamRelated) {
+      const teamMembers = proposal.teamId.members.map(member => member.memberName);
+      const memberIndex = teamMembers.indexOf(name);
+
+      if (memberIndex === -1) {
+        console.error('Member not found in the team:', name);
+        return res.status(400).json({ error: 'Member not found in the team' });
+      }
+
+      // Insert the vote at the correct position
+      console.log(`Inserting vote for member ${name} at index ${memberIndex}`);
+      await Proposal.findByIdAndUpdate(
+        id,
+        { $push: { votes: { $each: [addedVote], $position: memberIndex } } },
+        { new: true }
+      );
+    } else {
+      // Non-team-related proposal, add the vote at the beginning
+      console.log(`Inserting vote for member ${name} at the beginning`);
+      await Proposal.findByIdAndUpdate(
+        id,
+        { $push: { votes: { $each: [addedVote], $position: 0 } } },
+        { new: true }
+      );
+    }
+
+    console.log('Vote added successfully to proposal.');
+
+    // If the user is not the owner, update the participatedProposals
+    if (!isOwner) {
+      const user = await User.findById(userId);
+      if (!user) {
+        console.error('User not found:', userId);
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      console.log('User fetched successfully:', user);
+      // Find existing participation for the proposal
+      const existingParticipation = user.participatedProposals.find(p => p.proposalId.toString() === id);
+
+      if (existingParticipation) {
+        console.log('User already participated in this proposal, updating voteId...');
+        // Update the voteId if the user already participated
+        existingParticipation.voteId = newVoteId;
+      } else {
+        console.log('User has not participated yet, adding new participation entry...');
+        // Add new participation if not found
+        user.participatedProposals.push({ proposalId: id, voteId: newVoteId });
+      }
+
+      // Save the updated user document
+      await user.save();
+      console.log('User updated successfully with new participated proposals.');
+    } else {
+      console.log('User is the creator of the proposal. Skipping participation update.');
+    }
+
+    // Optionally log or handle submission events
+    console.log('Adding vote to queue for further processing...');
+    addVoteToQueue(id, proposal, { name, opinion, comment, action: 'submit' });
+
+    // Send a success response with added vote details
+    console.log('Vote submission process completed successfully.');
+    res.status(200).json({
+      message: 'Vote submitted and participation updated successfully',
+      addedVote,
+      limitReached: false,
+    });
+  } catch (error) {
+    console.error('Error during vote submission:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+*/
+
+
