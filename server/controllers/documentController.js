@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { b2 } = require('../config/backblaze');
+const { b2 } = require('../utils/Backblaze');
 const Proposal = require('../models/Proposal');
 const Document = require('../models/Document');
 
