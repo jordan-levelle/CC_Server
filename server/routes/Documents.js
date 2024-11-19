@@ -1,18 +1,13 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
+const { uploadDocument } = require('../controllers/documentController');
 
-// Set up multer memory storage
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const router = express.Router();
 
-// Import your controller
-const { documentUpload } = require('../controllers/documentController');
+// Configure multer for file uploads
+const upload = multer({ dest: 'uploads/' });
 
-// Route to upload document
-router.post('/:id', upload.single('file'), (req, res) => {
-  const gfs = req.app.get('gfs');
-  documentUpload(req, res, gfs);
-});
+// Document upload route
+router.post('/upload/:proposalId', upload.single('file'), uploadDocument);
 
 module.exports = router;
