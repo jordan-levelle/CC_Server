@@ -16,22 +16,23 @@ const uploadDocument = async (req, res) => {
 
     // Step 1: Read file into a Buffer
     const fileBuffer = fs.readFileSync(file.path);
-    const fileStats = fs.statSync(file.path); // Get file size
+    const fileStats = fs.statSync(file.path); 
     const fileSize = fileStats.size;
 
     // Step 2: Upload file to Backblaze
     const bucketId = process.env.BUCKET_ID;
+    const bucketUrl = process.env.BUCKET_URL;
     const { data: uploadUrl } = await b2.getUploadUrl({ bucketId });
 
     const uploadResponse = await b2.uploadFile({
       uploadUrl: uploadUrl.uploadUrl,
       uploadAuthToken: uploadUrl.authorizationToken,
       fileName: file.originalname,
-      data: fileBuffer, // Pass the Buffer
+      data: fileBuffer, 
       contentLength: fileSize,
     });
 
-    const fileUrl = `https://s3.us-east-005.backblazeb2.com/file/${bucketId}/${file.originalname}`;
+    const fileUrl = `${bucketUrl}/file/${bucketId}/${file.originalname}`;
 
     // Step 3: Save file details to MongoDB
     const newDocument = await Document.create({
