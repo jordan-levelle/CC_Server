@@ -14,19 +14,26 @@ const uploadDocument = async (req, res) => {
       return res.status(404).json({ message: 'Proposal not found' });
     }
 
-    // Step 1: Upload file to Backblaze
+    // Step 1: Read file into a Buffer
+    const fileBuffer = fs.readFileSync(file.path);
+    const fileStats = fs.statSync(file.path); // Get file size
+    const fileSize = fileStats.size;
+
+    // Step 2: Upload file to Backblaze
     const bucketId = process.env.BUCKET_ID;
-    const uploadUrl = await b2.getUploadUrl({ bucketId });
+    const { data: uploadUrl } = await b2.getUploadUrl({ bucketId });
+
     const uploadResponse = await b2.uploadFile({
-      uploadUrl: uploadUrl.data.uploadUrl,
-      uploadAuthToken: uploadUrl.data.authorizationToken,
+      uploadUrl: uploadUrl.uploadUrl,
+      uploadAuthToken: uploadUrl.authorizationToken,
       fileName: file.originalname,
-      data: fs.createReadStream(file.path),
+      data: fileBuffer, // Pass the Buffer
+      contentLength: fileSize,
     });
 
     const fileUrl = `https://s3.us-east-005.backblazeb2.com/file/${bucketId}/${file.originalname}`;
 
-    // Step 2: Save file details to MongoDB
+    // Step 3: Save file details to MongoDB
     const newDocument = await Document.create({
       fileName: file.originalname,
       fileUrl,
@@ -35,11 +42,11 @@ const uploadDocument = async (req, res) => {
       proposal: proposalId,
     });
 
-    // Step 3: Associate document with proposal
+    // Step 4: Associate document with proposal
     proposal.documents.push(newDocument._id);
     await proposal.save();
 
-    // Step 4: Cleanup local upload
+    // Step 5: Cleanup local upload
     fs.unlinkSync(file.path);
 
     res.status(200).json({ message: 'File uploaded successfully', document: newDocument });
