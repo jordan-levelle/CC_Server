@@ -24,7 +24,7 @@ const uploadDocument = async (req, res) => {
       data: fs.createReadStream(file.path),
     });
 
-    const fileUrl = `https://f002.backblazeb2.com/file/${bucketId}/${file.originalname}`;
+    const fileUrl = `https://s3.us-east-005.backblazeb2.com/file/${bucketId}/${file.originalname}`;
 
     // Step 2: Save file details to MongoDB
     const newDocument = await Document.create({

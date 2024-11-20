@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { createServer } = require('node:http');
 require('dotenv').config();
 
+const { initializeBackblaze } = require('./utils/Backblaze.js');
 const propCheckExpiredScheduler = require('./utils/Scheduler.js');
 const documentRoutes = require('./routes/Documents');
 const proposalRoutes = require('./routes/Proposals');
@@ -34,9 +35,17 @@ app.use((req, res, next) => {
 
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
-mongoose
-  .connect(process.env.MONGO_URI)
+// Initialize Backblaze
+initializeBackblaze()
   .then(() => {
+    console.log('Backblaze initialized successfully');
+
+    // Connect to MongoDB
+    return mongoose.connect(process.env.MONGO_URI);
+  })
+  .then(() => {
+    console.log('Connected to MongoDB');
+
     // Register routes
     app.use('/api/documents', documentRoutes);
     app.use('/api/proposals', proposalRoutes);
@@ -51,7 +60,10 @@ mongoose
       console.log('Connected to db & listening on port', process.env.PORT || 3000);
     });
   })
-  .catch((error) => console.error('MongoDB connection error:', error));
+  .catch((error) => {
+    console.error('Server startup error:', error);
+    process.exit(1); // Exit the process on critical failure
+  });
 
 // Root route
 app.get('/', (req, res) => {
@@ -59,4 +71,3 @@ app.get('/', (req, res) => {
 });
 
 module.exports = server;
-
