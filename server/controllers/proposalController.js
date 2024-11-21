@@ -20,20 +20,33 @@ const getProposal = async (req, res) => {
   const { uniqueUrl } = req.params;
 
   try {
-    // Find the proposal by uniqueUrl
-    const proposal = await Proposal.findOne({ uniqueUrl });
+    // Find the proposal and populate related documents
+    const proposal = await Proposal.findOne({ uniqueUrl }).populate({
+      path: 'documents',
+      select: 'fileName fileUrl createdAt', // Limit fields returned
+    });
 
-    // Handle case where proposal is not found
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    // Extract user ID and prepare proposal data
-    const { user_id, ...proposalData } = proposal.toObject();
+    // Extract user_id for ownership check and other proposal data
+    const { user_id, documents, ...proposalData } = proposal.toObject();
     const isOwner = req.user && req.user._id.toString() === user_id.toString();
 
-    // No need to handle socket connection here; just return proposal data
-    res.status(200).json({ proposal: proposalData, isOwner });
+    // Map document metadata
+    const documentMetadata = documents.map((doc) => ({
+      documentId: doc._id,
+      fileName: doc.fileName,
+      uploadedAt: doc.createdAt,
+    }));
+
+    // Respond with proposal details and document metadata
+    res.status(200).json({
+      proposal: proposalData,
+      isOwner,
+      documents: documentMetadata,
+    });
   } catch (error) {
     console.error('Error fetching proposal by unique URL:', error);
     res.status(500).json({ error: 'Internal server error' });

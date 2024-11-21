@@ -3,6 +3,9 @@ const { b2 } = require('../utils/Backblaze');
 const Proposal = require('../models/Proposal');
 const Document = require('../models/Document');
 
+const bucketId = process.env.BUCKET_ID;
+const bucketUrl = process.env.BUCKET_URL;
+
 // Upload document and associate it with a proposal
 const uploadDocument = async (req, res) => {
   const { proposalId } = req.params;
@@ -20,8 +23,6 @@ const uploadDocument = async (req, res) => {
     const fileSize = fileStats.size;
 
     // Step 2: Upload file to Backblaze
-    const bucketId = process.env.BUCKET_ID;
-    const bucketUrl = process.env.BUCKET_URL;
     const { data: uploadUrl } = await b2.getUploadUrl({ bucketId });
 
     const uploadResponse = await b2.uploadFile({
@@ -57,6 +58,41 @@ const uploadDocument = async (req, res) => {
   }
 };
 
+const downloadDocument = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    const document = await Document.findById(documentId);
+    if(!document){
+      return res.status(404).json({ message: 'Document not found'});
+    }
+
+    const { data: downloadAuth } = await b2.getDownloadAuthorization({
+      bucketId: process.env.BUCKET_ID,
+      fileNamePrefix: document.fileName,
+      validDurationInSeconds: 3600, // Optional Limit Validity
+    })
+
+    const downloadUrl = `${bucketUrl}/file/${bucketId}/${document.fileName}?Authorization=${downloadAuth.authorizationToken}`;
+
+    res.status(200).json({ fileUrl: downloadUrl})
+  } catch (error) {
+    console.error('Error fetching document from backblaze', error)
+    res.status(500).json({ message: 'Error fetching backblaze document', error});
+  }
+}
+
+const removeDocument = async (req, res) => {
+
+}
+
+const replaceDocument = async (req, res) => {
+
+}
+
 module.exports = {
   uploadDocument,
+  downloadDocument,
+  removeDocument,
+  replaceDocument
 };
