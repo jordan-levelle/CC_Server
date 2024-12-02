@@ -62,30 +62,18 @@ const downloadDocument = async (req, res) => {
   try {
     const { documentId } = req.params;
 
-    // Find the document in your database
     const document = await Document.findById(documentId);
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    // Fetch download authorization from Backblaze
-    const { data: downloadAuth } = await b2.getDownloadAuthorization({
-      bucketId: process.env.BUCKET_ID,
-      fileNamePrefix: document.fileName, // Use the file's full path if needed
-      validDurationInSeconds: 3600, // 1-hour validity
-    });
+    // Construct the public URL for the document
+    const downloadUrl = `${process.env.BUCKET_URL}/cctesting/${encodeURIComponent(document.fileName)}`;
 
-    // Construct the signed download URL
-    const downloadUrl = `${process.env.BUCKET_URL}/file/cctesting/${document.fileName}?Authorization=${downloadAuth.authorizationToken}`;
-
-    console.log('Bucket ID:', process.env.BUCKET_ID);
-    console.log('File Name Prefix:', document.fileName);
-    console.log('Bucket URL:', bucketUrl);
-    // Send the signed URL to the client
     res.status(200).json({ fileUrl: downloadUrl });
   } catch (error) {
-    console.error('Error fetching document from Backblaze:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Error fetching Backblaze document', error });
+    console.error('Error fetching document URL:', error);
+    res.status(500).json({ message: 'Error fetching document URL', error });
   }
 };
 
