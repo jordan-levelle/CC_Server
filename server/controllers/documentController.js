@@ -76,7 +76,7 @@ const downloadDocument = async (req, res) => {
     });
 
     // Construct the signed download URL
-    const downloadUrl = `${process.env.BUCKET_URL}/${document.fileName}?Authorization=${downloadAuth.authorizationToken}`;
+    const downloadUrl = `${process.env.BUCKET_URL}/file/cctesting/${document.fileName}?Authorization=${downloadAuth.authorizationToken}`;
 
     // Send the signed URL to the client
     res.status(200).json({ fileUrl: downloadUrl });
