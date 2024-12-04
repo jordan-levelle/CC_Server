@@ -421,8 +421,9 @@ const archiveParticipatedProposal = async (req, res) => {
 };
 
 
+// Controller function
 const makeSubscriptionPayment = async (req, res) => {
-  const { productId } = req.body;
+  const { amount } = req.body; // Receive the amount chosen by the user
 
   // Find the user in the database
   let user = req.user; // User is already attached to the request by requireAuth middleware
@@ -442,21 +443,23 @@ const makeSubscriptionPayment = async (req, res) => {
     await user.save();
   }
 
-  // Retrieve the correct priceId for the product (you can adjust this logic based on your needs)
-  // In this case, I'm assuming `productId` corresponds to a price that was set up in Stripe
-  let priceId = process.env.STRIPE_PRODUCT_PRICE_ID; // For example, you can store the priceId in an environment variable or database
-
-  if (!priceId) {
-    return res.status(400).json({ error: 'Product price ID not found' });
-  }
-
   try {
+    // Dynamically create a price based on the amount chosen by the user
+    const price = await stripe.prices.create({
+      unit_amount: amount * 100, // Convert dollars to cents (Stripe expects cents)
+      currency: 'usd', // You can adjust the currency as needed
+      product_data: {
+        name: 'Custom Subscription', // You can name it based on your product
+      },
+    });
+
+    // Create a Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer: customerId,
       line_items: [
         {
-          price: priceId, // Set the correct price ID here
+          price: price.id, // Use the dynamically created price ID
           quantity: 1,
         },
       ],
@@ -465,13 +468,14 @@ const makeSubscriptionPayment = async (req, res) => {
       cancel_url: `${process.env.ORIGIN}/subscribe?canceled=true`,
     });
 
-    // Send back only the session URL for redirection
+    // Send back the session URL for redirection
     res.json({ url: session.url });
   } catch (error) {
     console.error('Error creating Stripe session:', error);
     res.status(500).json({ error: 'Failed to create Stripe session' });
   }
 };
+
 
 
 
