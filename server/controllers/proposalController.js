@@ -161,6 +161,8 @@ const deleteProposal = async (req, res) => {
     return res.status(400).json({ error: 'No such proposal' });
   }
 
+  await Document.deleteOne({ proposalId: id});
+
   // Remove the proposal ID from users proposals
   await User.updateMany(
     { proposals: id },

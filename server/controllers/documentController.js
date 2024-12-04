@@ -68,7 +68,7 @@ const downloadDocument = async (req, res) => {
     }
 
     // Construct the public URL for the document
-    const downloadUrl = `${process.env.BUCKET_URL}/cctesting/${encodeURIComponent(document.fileName)}`;
+    const downloadUrl = `${process.env.BUCKET_URL}/consensus-check/${encodeURIComponent(document.fileName)}`;
 
     res.status(200).json({ fileUrl: downloadUrl });
   } catch (error) {
