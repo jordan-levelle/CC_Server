@@ -421,10 +421,8 @@ const archiveParticipatedProposal = async (req, res) => {
 };
 
 
-
-
 const makeSubscriptionPayment = async (req, res) => {
-  const { priceId } = req.body;
+  const { productId } = req.body;
 
   // Find the user in the database
   let user = req.user; // User is already attached to the request by requireAuth middleware
@@ -442,8 +440,14 @@ const makeSubscriptionPayment = async (req, res) => {
     customerId = customer.id;
     user.stripeCustomerId = customerId;
     await user.save();
-  } else {
+  }
 
+  // Retrieve the correct priceId for the product (you can adjust this logic based on your needs)
+  // In this case, I'm assuming `productId` corresponds to a price that was set up in Stripe
+  let priceId = process.env.STRIPE_PRODUCT_PRICE_ID; // For example, you can store the priceId in an environment variable or database
+
+  if (!priceId) {
+    return res.status(400).json({ error: 'Product price ID not found' });
   }
 
   try {
@@ -452,7 +456,7 @@ const makeSubscriptionPayment = async (req, res) => {
       customer: customerId,
       line_items: [
         {
-          price: 'price_1QRyA5DfXxf0bxwG0dgk49a8',
+          price: priceId, // Set the correct price ID here
           quantity: 1,
         },
       ],
@@ -468,6 +472,8 @@ const makeSubscriptionPayment = async (req, res) => {
     res.status(500).json({ error: 'Failed to create Stripe session' });
   }
 };
+
+
 
 
 
