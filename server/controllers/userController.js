@@ -452,7 +452,7 @@ const makeSubscriptionPayment = async (req, res) => {
       customer: customerId,
       line_items: [
         {
-          price: 'price_1PdwW3DfXxf0bxwGjLCd8htC',
+          price: 'price_1QRyA5DfXxf0bxwG0dgk49a8',
           quantity: 1,
         },
       ],
@@ -468,6 +468,8 @@ const makeSubscriptionPayment = async (req, res) => {
     res.status(500).json({ error: 'Failed to create Stripe session' });
   }
 };
+
+
 
 const cancelSubscription  = async (req, res) => {
   try {
