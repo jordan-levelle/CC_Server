@@ -425,8 +425,12 @@ const archiveParticipatedProposal = async (req, res) => {
 const makeSubscriptionPayment = async (req, res) => {
   const { amount } = req.body; // Receive the amount chosen by the user
 
+  if (!amount || amount < 5) { // Optional: Enforce a minimum amount (e.g., $5)
+    return res.status(400).json({ error: 'Amount must be at least $5' });
+  }
+
   // Find the user in the database
-  let user = req.user; // User is already attached to the request by requireAuth middleware
+  const user = req.user; // User is already attached to the request by requireAuth middleware
 
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
@@ -444,22 +448,20 @@ const makeSubscriptionPayment = async (req, res) => {
   }
 
   try {
-    // Dynamically create a price based on the amount chosen by the user
-    const price = await stripe.prices.create({
-      unit_amount: amount * 100, // Convert dollars to cents (Stripe expects cents)
-      currency: 'usd', // You can adjust the currency as needed
-      product_data: {
-        name: 'Custom Subscription', // You can name it based on your product
-      },
-    });
-
-    // Create a Stripe Checkout session
+    // Create a Stripe Checkout session using price_data
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer: customerId,
       line_items: [
         {
-          price: price.id, // Use the dynamically created price ID
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Custom Subscription', // Product name for display
+            },
+            unit_amount: amount * 100, // Convert dollars to cents
+            recurring: { interval: 'year' }, // Yearly subscription
+          },
           quantity: 1,
         },
       ],
@@ -475,8 +477,6 @@ const makeSubscriptionPayment = async (req, res) => {
     res.status(500).json({ error: 'Failed to create Stripe session' });
   }
 };
-
-
 
 
 
