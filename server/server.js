@@ -25,13 +25,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
 
-// Middleware
+// Middleware for standard routes
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use((req, res, next) => {
-  next();
-});
+// Mount Stripe webhook route with raw body parsing
+app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
 
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
@@ -46,12 +45,11 @@ initializeBackblaze()
   .then(() => {
     console.log('Connected to MongoDB');
 
-    // Register routes
+    // Register all other routes
     app.use('/api/documents', documentRoutes);
     app.use('/api/proposals', proposalRoutes);
     app.use('/api/user', userRoutes);
     app.use('/api/teams', teamRoutes);
-    app.use('/api/webhooks', webhookRoutes);
     app.use('/api/admin', adminRoutes);
 
     // Start scheduler and server
