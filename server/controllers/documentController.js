@@ -1,4 +1,5 @@
 const fs = require('fs');
+const mongoose = require('mongoose');
 const { b2 } = require('../utils/Backblaze');
 const Proposal = require('../models/Proposal');
 const Document = require('../models/Document');
