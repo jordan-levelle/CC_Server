@@ -3,12 +3,13 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const router = express.Router();
 
-router.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
   let event;
 
   try {
+    // Construct the event from Stripe's payload and signature
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
@@ -21,11 +22,23 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
         const session = event.data.object;
         const customerId = session.customer;
 
+        // Log event data for better debugging
+        console.log(`Received 'checkout.session.completed' event for customer ID: ${customerId}`);
+        console.log('Session details:', session);
+
         const user = await User.findOne({ stripeCustomerId: customerId });
+
         if (user) {
+          console.log(`User found for Stripe customer ID: ${customerId}`);
+          console.log('Updating user subscription status to active.');
+          console.log('Subscription ID:', session.subscription);
+
           user.subscriptionStatus = true;
           user.stripeSubscriptionId = session.subscription;
+
+          // Save the updated user data
           await user.save();
+          console.log(`User subscription status updated for customer ID: ${customerId}`);
         } else {
           console.warn(`No user found for Stripe customer ID: ${customerId}`);
         }
