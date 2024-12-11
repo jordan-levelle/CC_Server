@@ -3,78 +3,73 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body, 
-      sig, 
-      endpointSecret);
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
-    console.error('Webhook Error:', err.message);
+    console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object;
-      const customerId = session.customer;
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        const customerId = session.customer;
 
-      try {
         const user = await User.findOne({ stripeCustomerId: customerId });
         if (user) {
           user.subscriptionStatus = true;
           user.stripeSubscriptionId = session.subscription;
           await user.save();
+        } else {
+          console.warn(`No user found for Stripe customer ID: ${customerId}`);
         }
-      } catch (error) {
-        console.error('Error updating user subscription:', error.message);
+        break;
       }
-      break;
-    }
 
-    case 'checkout.session.expired': {
-      const session = event.data.object;
-      const customerId = session.customer;
+      case 'checkout.session.expired': {
+        const session = event.data.object;
+        const customerId = session.customer;
 
-      try {
         const user = await User.findOne({ stripeCustomerId: customerId });
         if (user) {
           user.subscriptionStatus = false;
           user.stripeSubscriptionId = null;
           await user.save();
+        } else {
+          console.warn(`No user found for Stripe customer ID: ${customerId}`);
         }
-      } catch (error) {
-        console.error('Error updating user subscription:', error.message);
+        break;
       }
-      break;
-    }
 
-    case 'customer.subscription.deleted': {
-      const subscription = event.data.object;
-      const customerId = subscription.customer;
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
 
-      try {
         const user = await User.findOne({ stripeCustomerId: customerId });
         if (user) {
           user.subscriptionStatus = false;
           user.stripeSubscriptionId = null;
           await user.save();
+        } else {
+          console.warn(`No user found for Stripe customer ID: ${customerId}`);
         }
-      } catch (error) {
-        console.error('Error updating user subscription:', error.message);
+        break;
       }
-      break;
-    }
 
-    default:
-      console.log(`Unhandled event type ${event.type}`);
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+  } catch (error) {
+    console.error('Error handling webhook event:', error.message);
   }
 
-  res.json({ received: true });
+  res.status(200).json({ received: true });
 });
 
 module.exports = router;
