@@ -27,11 +27,12 @@ app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
 
 // Middleware for standard routes
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 // Mount Stripe webhook route with raw body parsing
 // This ensures that only the `/webhooks` route uses raw body parsing
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+
+app.use(express.json());
 
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
