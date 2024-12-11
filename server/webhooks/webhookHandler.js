@@ -1,17 +1,18 @@
 const express = require('express');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
-
 const router = express.Router();
 
-// Use raw body middleware specifically for Stripe webhooks
-router.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(
+      req.body, 
+      sig, 
+      endpointSecret);
   } catch (err) {
     console.error('Webhook Error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);

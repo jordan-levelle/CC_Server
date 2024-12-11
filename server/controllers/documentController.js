@@ -79,16 +79,37 @@ const downloadDocument = async (req, res) => {
 
 
 const removeDocument = async (req, res) => {
+  const { documentId } = req.params; // Extract document ID from route parameters
 
-}
+  if (!mongoose.Types.ObjectId.isValid(documentId)) {
+    return res.status(400).json({ error: 'Invalid document ID' });
+  }
 
-const replaceDocument = async (req, res) => {
+  try {
+    // Find the document by ID
+    const document = await Document.findById(documentId);
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
 
-}
+    // Remove the document from the associated proposal
+    await Proposal.findByIdAndUpdate(document.proposal, {
+      $pull: { documents: document._id },
+    });
+
+    // Remove the document from the database
+    await Document.findByIdAndDelete(documentId);
+
+    res.status(200).json({ message: 'Document successfully removed' });
+  } catch (error) {
+    console.error('Error removing document:', error);
+    res.status(500).json({ error: 'Failed to remove document' });
+  }
+};
+
 
 module.exports = {
   uploadDocument,
   downloadDocument,
   removeDocument,
-  replaceDocument
 };

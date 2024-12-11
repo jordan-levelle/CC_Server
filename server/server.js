@@ -30,7 +30,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Mount Stripe webhook route with raw body parsing
-app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+// Mount webhook routes
+app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+
 
 console.log('Connecting to MongoDB at:', process.env.MONGO_URI);
 
