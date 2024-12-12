@@ -466,8 +466,8 @@ const makeSubscriptionPayment = async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.ORIGIN}/subscribe?success=true`,
-      cancel_url: `${process.env.ORIGIN}/subscribe?canceled=true`,
+      success_url: `${process.env.ORIGIN}/profile?success=true`,
+      cancel_url: `${process.env.ORIGIN}/profile?canceled=true`,
     });
 
     // Send back the session URL for redirection
@@ -478,6 +478,42 @@ const makeSubscriptionPayment = async (req, res) => {
   }
 };
 
+// Controller function to fetch user subscription status
+const fetchUserSubscription = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming the user ID is available in req.user after authentication
+
+    // Find the user in the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if the user has a Stripe customer ID
+    if (!user.stripeCustomerId) {
+      return res.status(200).json({ isSubscribed: false });
+    }
+
+    // Retrieve the Stripe customer and their subscriptions
+    const subscriptions = await stripe.subscriptions.list({
+      customer: user.stripeCustomerId,
+      status: 'active',
+    });
+
+    // Determine if the user has any active subscriptions
+    const isSubscribed = subscriptions.data.length > 0;
+
+    // Return updated user info with subscription status
+    return res.status(200).json({
+      email: user.email,
+      isSubscribed,
+    });
+  } catch (error) {
+    console.error('Error fetching user subscription:', error);
+    return res.status(500).json({ error: 'Failed to fetch subscription status' });
+  }
+};
 
 
 
@@ -518,6 +554,7 @@ module.exports = {
   deleteUser, 
   updateUserEmail,
   makeSubscriptionPayment,
+  fetchUserSubscription,
   cancelSubscription,
   resetUserPassword,
   forgotUserPassword,

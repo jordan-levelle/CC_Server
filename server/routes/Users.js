@@ -8,6 +8,7 @@ const {
   resetUserPassword,
   updateUserEmail,
   makeSubscriptionPayment,
+  fetchUserSubscription,
   cancelSubscription,
   getParticipatedProposals,
   removeParticipatedProposal,
@@ -33,6 +34,7 @@ router.post('/resetForgotPassword', resetForgotUserPassword);
 
 // Subscription routes
 router.post('/makePayment', requireAuth, makeSubscriptionPayment);
+router.get('/fetchUserSubscription', requireAuth, fetchUserSubscription);
 router.post('/cancel-subscription', requireAuth, cancelSubscription);
 
 // Participated proposals routes
